@@ -1,0 +1,218 @@
+===== UNUSED FILES ANALYSIS =====
+
+Total files analyzed: 233
+Entry points identified: 43
+Referenced files: 147
+Potentially unused files: 86
+
+
+===== UNUSED FILES BY DIRECTORY =====
+
+
+./
+  - find-unused-files.js
+
+app/(pages)/account/
+  - PublicProfilePage.tsx
+  - settings.tsx
+
+components/
+  - LandingPage.tsx
+  - LayoutWrapper.tsx
+  - debugnav.jsx
+
+components/Events/
+  - AuthForm.tsx
+  - Events1.jsx
+  - Events2.jsx
+
+components/Feed_old/
+  - Header.tsx
+  - Index.tsx
+  - Post.tsx
+
+components/Home/
+  - SearchBar.tsx
+
+components/Inputs/
+  - TripPlanner.jsx
+
+components/My-Profile/ui/
+  - navigation-menu.tsx
+
+components/QuestPopups/
+  - AddLocation.jsx
+  - AddTags.jsx
+  - PostQuest.jsx
+  - TagPeople.jsx
+  - VisibleTo.jsx
+
+components/quest/
+  - CreateGroupFromQuest.tsx
+  - CreateQuest.jsx
+  - CreateQuestPage.tsx
+  - DestinationSearch.tsx
+  - EngagementSection.jsx
+  - FlowCards.jsx
+  - Index.tsx
+  - LoadingAnimations.tsx
+  - MapIntegration.jsx
+  - MobileFlowCard.tsx
+  - QuestHeader.jsx
+  - QuestPage.tsx
+
+components/services/
+  - test.ts
+
+components/trip-planner/
+  - DayItinerary.tsx
+  - HotelDetail.tsx
+  - Icons.tsx
+  - InfoButton.tsx
+  - LocationList.tsx
+  - MapView.tsx
+  - TripHeader.tsx
+  - TripSidebar.tsx
+
+components/trip-planner/transport/
+  - BusCard.tsx
+  - TrainCard.tsx
+  - transportOptions.tsx
+
+components/ui/
+  - ErrorMessage.jsx
+  - accordion.tsx
+  - alert-dialog.tsx
+  - alert.tsx
+  - aspect-ratio.tsx
+  - avatar.tsx
+  - badge.tsx
+  - breadcrumb.tsx
+  - calender.tsx
+  - carousel.tsx
+  - checkbox.tsx
+  - collapsible.tsx
+  - command.tsx
+  - context-menu.tsx
+  - drawer.tsx
+  - dropdown-menu.tsx
+  - form.tsx
+  - hover-card.tsx
+  - input-otp.tsx
+  - menubar.tsx
+  - navigation-menu.tsx
+  - pagination.tsx
+  - popover.tsx
+  - progress.tsx
+  - radio-group.tsx
+  - resizable.tsx
+  - select.tsx
+  - sidebar.tsx
+  - slider.tsx
+  - switch.tsx
+  - tabs.jsx
+  - textarea.tsx
+  - toast.tsx
+  - toggle-group.tsx
+  - use-toast.ts
+
+hooks/
+  - badgeConfig.ts
+  - useInfiniteScroll.ts
+  - useUserProfile.ts
+
+lib/
+  - chatService.ts
+  - followService.ts
+  - server.js
+  - tripService.js
+
+
+===== FULL LIST =====
+
+app/(pages)/account/PublicProfilePage.tsx
+app/(pages)/account/settings.tsx
+components/Events/AuthForm.tsx
+components/Events/Events1.jsx
+components/Events/Events2.jsx
+components/Feed_old/Header.tsx
+components/Feed_old/Index.tsx
+components/Feed_old/Post.tsx
+components/Home/SearchBar.tsx
+components/Inputs/TripPlanner.jsx
+components/LandingPage.tsx
+components/LayoutWrapper.tsx
+components/My-Profile/ui/navigation-menu.tsx
+components/QuestPopups/AddLocation.jsx
+components/QuestPopups/AddTags.jsx
+components/QuestPopups/PostQuest.jsx
+components/QuestPopups/TagPeople.jsx
+components/QuestPopups/VisibleTo.jsx
+components/debugnav.jsx
+components/quest/CreateGroupFromQuest.tsx
+components/quest/CreateQuest.jsx
+components/quest/CreateQuestPage.tsx
+components/quest/DestinationSearch.tsx
+components/quest/EngagementSection.jsx
+components/quest/FlowCards.jsx
+components/quest/Index.tsx
+components/quest/LoadingAnimations.tsx
+components/quest/MapIntegration.jsx
+components/quest/MobileFlowCard.tsx
+components/quest/QuestHeader.jsx
+components/quest/QuestPage.tsx
+components/services/test.ts
+components/trip-planner/DayItinerary.tsx
+components/trip-planner/HotelDetail.tsx
+components/trip-planner/Icons.tsx
+components/trip-planner/InfoButton.tsx
+components/trip-planner/LocationList.tsx
+components/trip-planner/MapView.tsx
+components/trip-planner/TripHeader.tsx
+components/trip-planner/TripSidebar.tsx
+components/trip-planner/transport/BusCard.tsx
+components/trip-planner/transport/TrainCard.tsx
+components/trip-planner/transport/transportOptions.tsx
+components/ui/ErrorMessage.jsx
+components/ui/accordion.tsx
+components/ui/alert-dialog.tsx
+components/ui/alert.tsx
+components/ui/aspect-ratio.tsx
+components/ui/avatar.tsx
+components/ui/badge.tsx
+components/ui/breadcrumb.tsx
+components/ui/calender.tsx
+components/ui/carousel.tsx
+components/ui/checkbox.tsx
+components/ui/collapsible.tsx
+components/ui/command.tsx
+components/ui/context-menu.tsx
+components/ui/drawer.tsx
+components/ui/dropdown-menu.tsx
+components/ui/form.tsx
+components/ui/hover-card.tsx
+components/ui/input-otp.tsx
+components/ui/menubar.tsx
+components/ui/navigation-menu.tsx
+components/ui/pagination.tsx
+components/ui/popover.tsx
+components/ui/progress.tsx
+components/ui/radio-group.tsx
+components/ui/resizable.tsx
+components/ui/select.tsx
+components/ui/sidebar.tsx
+components/ui/slider.tsx
+components/ui/switch.tsx
+components/ui/tabs.jsx
+components/ui/textarea.tsx
+components/ui/toast.tsx
+components/ui/toggle-group.tsx
+components/ui/use-toast.ts
+find-unused-files.js
+hooks/badgeConfig.ts
+hooks/useInfiniteScroll.ts
+hooks/useUserProfile.ts
+lib/chatService.ts
+lib/followService.ts
+lib/server.js
+lib/tripService.js
