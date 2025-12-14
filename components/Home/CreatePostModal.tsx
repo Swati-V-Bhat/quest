@@ -70,7 +70,7 @@
 //     });
 //     const [isDragging, setIsDragging] = useState(false);
 //     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-    
+
 //     const fileInputRef = useRef<HTMLInputElement>(null);
 //     const imageContainerRef = useRef<HTMLDivElement>(null);
 //     const locationInputRef = useRef<HTMLInputElement>(null);
@@ -188,22 +188,22 @@
 //                     img.onload = () => {
 //                         const canvas = document.createElement('canvas');
 //                         const ctx = canvas.getContext('2d');
-                        
+
 //                         canvas.width = TARGET_WIDTH;
 //                         canvas.height = TARGET_HEIGHT;
-                        
+
 //                         if (ctx) {
 //                             // Fill with black background
 //                             ctx.fillStyle = '#000000';
 //                             ctx.fillRect(0, 0, TARGET_WIDTH, TARGET_HEIGHT);
-                            
+
 //                             // Apply filters
 //                             ctx.filter = `brightness(${adjustments.brightness}%) contrast(${adjustments.contrast}%) saturate(${adjustments.saturation}%)`;
-                            
+
 //                             // Calculate dimensions to fit the image
 //                             const imgRatio = img.width / img.height;
 //                             let drawWidth, drawHeight;
-                            
+
 //                             if (imgRatio > ASPECT_RATIO) {
 //                                 drawHeight = TARGET_HEIGHT;
 //                                 drawWidth = drawHeight * imgRatio;
@@ -211,25 +211,25 @@
 //                                 drawWidth = TARGET_WIDTH;
 //                                 drawHeight = drawWidth / imgRatio;
 //                             }
-                            
+
 //                             // Apply scale
 //                             drawWidth *= adjustments.scale;
 //                             drawHeight *= adjustments.scale;
-                            
+
 //                             // Calculate position with adjustments
 //                             let x = (TARGET_WIDTH - drawWidth) / 2 + adjustments.positionX;
 //                             let y = (TARGET_HEIGHT - drawHeight) / 2 + adjustments.positionY;
-                            
+
 //                             // Apply rotation
 //                             ctx.save();
 //                             ctx.translate(TARGET_WIDTH / 2, TARGET_HEIGHT / 2);
 //                             ctx.rotate((adjustments.rotation * Math.PI) / 180);
 //                             ctx.translate(-TARGET_WIDTH / 2, -TARGET_HEIGHT / 2);
-                            
+
 //                             ctx.drawImage(img, x, y, drawWidth, drawHeight);
 //                             ctx.restore();
 //                         }
-                        
+
 //                         resolve(canvas.toDataURL('image/jpeg', 0.92));
 //                     };
 //                     img.src = event.target.result;
@@ -244,7 +244,7 @@
 //         if (files.length === 0) return;
 
 //         const newFiles = files.slice(0, 10 - selectedImages.length);
-        
+
 //         const previews = await Promise.all(
 //             newFiles.map(file => processImage(file, imageAdjustments))
 //         );
@@ -300,11 +300,11 @@
 //         if (!isDragging) return;
 //         const newX = e.clientX - dragStart.x;
 //         const newY = e.clientY - dragStart.y;
-        
+
 //         const maxPan = 200 * (imageAdjustments.scale - 1);
 //         const limitedX = Math.max(-maxPan, Math.min(maxPan, newX));
 //         const limitedY = Math.max(-maxPan, Math.min(maxPan, newY));
-        
+
 //         setImageAdjustments(prev => ({ ...prev, positionX: limitedX, positionY: limitedY }));
 //     };
 
@@ -334,11 +334,11 @@
 //         const touch = e.touches[0];
 //         const newX = touch.clientX - dragStart.x;
 //         const newY = touch.clientY - dragStart.y;
-        
+
 //         const maxPan = 200 * (imageAdjustments.scale - 1);
 //         const limitedX = Math.max(-maxPan, Math.min(maxPan, newX));
 //         const limitedY = Math.max(-maxPan, Math.min(maxPan, newY));
-        
+
 //         setImageAdjustments(prev => ({ ...prev, positionX: limitedX, positionY: limitedY }));
 //     };
 
@@ -428,7 +428,7 @@
 //         <>
 //         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
 //             <div className="bg-gray-900 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
-                
+
 
 //                     {/* Header */}
 //                 <div className="flex items-center justify-between p-4 border-b border-gray-800">
@@ -448,7 +448,7 @@
 //                 {/* Scrollable Content */}
 //                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
 //                     {/* Caption Input */}
-                    
+
 
 //                     {/* Image Controls */}
 //                     {imagePreviews.length > 0 && (
@@ -479,7 +479,7 @@
 //                                         <RotateCw className="w-5 h-5" />
 //                                     </button>
 //                                 </div>
-                                
+
 //                                 <button
 //                                     onClick={() => setShowAdjustments(!showAdjustments)}
 //                                     className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
@@ -638,7 +638,7 @@
 //                             <Tag className="w-5 h-5" />
 //                             <span>{showTagInput || tags ? 'Edit Tags' : 'Add Tags'}</span>
 //                         </button>
-                        
+
 //                         {showTagInput && (
 //                             <input
 //                                 type="text"
@@ -650,7 +650,7 @@
 //                         )}
 //                     </div>
 
-                        
+
 //                     {/* Location Input with Autocomplete */}
 //                     <div className="relative">
 //                         <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 focus-within:border-orange-400">
@@ -696,7 +696,7 @@
 //                             </div>
 //                         )}
 //                     </div>
-                        
+
 //                         <textarea
 //                         placeholder="Your journey, your words…"
 //                         value={text}
@@ -705,7 +705,7 @@
 //                         className="w-full bg-transparent text-white placeholder-gray-400 focus:outline-none resize-none text-lg"
 //                     />
 
-                    
+
 
 //                 </div>
 
@@ -749,7 +749,7 @@
 //                         <button>button-1</button>
 //                         <button>button-2</button>
 //                     </div>
-                
+
 //                 )
 //                 }
 //             </div>
@@ -816,8 +816,8 @@ const CreatePostModal = ({ onClose, user }: CreatePostModalProps) => {
 
   const router = useRouter();
 
-  const [post, setPost] = useState(true);
-  const [quest, setQuest] = useState(false);
+  const [post, setPost] = useState(false);
+  const [quest, setQuest] = useState(true);
 
   const [text, setText] = useState('');
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -844,6 +844,7 @@ const CreatePostModal = ({ onClose, user }: CreatePostModalProps) => {
   });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [errorMessage, setErrorMessage] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
@@ -854,6 +855,14 @@ const CreatePostModal = ({ onClose, user }: CreatePostModalProps) => {
   const TARGET_WIDTH = 1080;
   const TARGET_HEIGHT = 1350;
   const ASPECT_RATIO = 4 / 5;
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   // Reset adjustments when switching images
   useEffect(() => {
@@ -1141,13 +1150,20 @@ const CreatePostModal = ({ onClose, user }: CreatePostModalProps) => {
   };
 
   const handlePost = async () => {
-    if (!text.trim() || !locationString.trim()) {
-      alert('Please add text and location for your post');
+    setErrorMessage('');
+
+    if (!text.trim()) {
+      setErrorMessage('Please add a caption for your post');
       return;
     }
 
     if (selectedImages.length === 0) {
-      alert('Please add at least one image');
+      setErrorMessage('Please add at least one image');
+      return;
+    }
+
+    if (!locationString.trim()) {
+      setErrorMessage('Please add a location for your post');
       return;
     }
 
@@ -1187,7 +1203,7 @@ const CreatePostModal = ({ onClose, user }: CreatePostModalProps) => {
       onClose();
     } catch (error) {
       console.error('Error creating post:', error);
-      alert('Failed to create post. Please try again.');
+      setErrorMessage('Failed to create post. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -1351,18 +1367,6 @@ const CreatePostModal = ({ onClose, user }: CreatePostModalProps) => {
                   </button>
                 )}
 
-                {/* Tags */}
-                <div className="space-y-2">
-                  <button onClick={() => setShowTagInput(!showTagInput)} className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition-colors">
-                    <Tag className="w-5 h-5" />
-                    <span>{showTagInput || tags ? 'Edit Tags' : 'Add Tags'}</span>
-                  </button>
-
-                  {showTagInput && (
-                    <input type="text" placeholder="travel, adventure, nature..." value={tags} onChange={(e) => setTags(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-orange-400" />
-                  )}
-                </div>
-
                 {/* Location Input with Autocomplete */}
                 <div className="relative">
                   <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 focus-within:border-orange-400">
@@ -1381,16 +1385,39 @@ const CreatePostModal = ({ onClose, user }: CreatePostModalProps) => {
                     </div>
                   )}
                 </div>
+
+                {/* Tags */}
+                <div className="space-y-2">
+                  <button onClick={() => setShowTagInput(!showTagInput)} className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition-colors">
+                    <Tag className="w-5 h-5" />
+                    <span>{showTagInput || tags ? 'Edit Tags' : 'Add Tags'}</span>
+                  </button>
+
+                  {showTagInput && (
+                    <input type="text" placeholder="travel, adventure, nature..." value={tags} onChange={(e) => setTags(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-orange-400" />
+                  )}
+                </div>
+
+                
               </div>
 
               {/* Footer */}
               <div className="p-4 border-t border-gray-800">
-                <button onClick={handlePost} disabled={loading || !text.trim() || !locationString.trim() || selectedImages.length === 0} className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-gray-700 disabled:to-gray-700 text-white font-semibold py-3 rounded-xl transition-all disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                {/* Error Message - Prominent Display */}
+                {errorMessage && (
+                  <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-center">
+                    <p className="text-red-400 font-medium text-base">{errorMessage}</p>
+                  </div>
+                )}
+
+                <button onClick={handlePost} disabled={loading} className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-gray-700 disabled:to-gray-700 text-white font-semibold py-3 rounded-xl transition-all disabled:cursor-not-allowed flex items-center justify-center gap-2">
                   {loading ? (<><Loader2 className="w-5 h-5 animate-spin" /><span>Posting...</span></>) : (<span>Post</span>)}
                 </button>
-                {(!text.trim() || !locationString.trim() || selectedImages.length === 0) && (
-                  <p className="text-xs text-gray-500 text-center mt-2">
-                    {!text.trim() ? 'Add caption' : !locationString.trim() ? 'Add location' : 'Add at least one photo'}
+
+                {/* Helper text for missing fields */}
+                {!errorMessage && (!text.trim() || !locationString.trim() || selectedImages.length === 0) && (
+                  <p className="text-sm text-gray-400 text-center mt-3">
+                    {!selectedImages.length ? '📷 Add at least one photo' : !text.trim() ? '✏️ Add a caption' : '📍 Add a location'}
                   </p>
                 )}
               </div>
@@ -1403,25 +1430,25 @@ const CreatePostModal = ({ onClose, user }: CreatePostModalProps) => {
           {quest && (
 
             <div className="p-6 flex flex-col gap-4">
-                <div className='flex flex-col gap-6'>
-                    <img src="./oq_logo.svg" alt="" className='w-1/5 h-1/5 text-orange-500' style={{ color: 'orange' }} />
-                    {/* <textarea
+              <div className='flex flex-col gap-6'>
+                <img src="./oq_logo.svg" alt="" className='w-1/6 h-1/6 text-orange-500' style={{ color: 'orange' }} />
+                {/* <textarea
                         placeholder="Share your latest trip.."
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         rows={3}
                         className="w-full bg-transparent text-white placeholder-gray-400 focus:outline-none resize-none text-lg border-2"
                     /> */}
-                    <h1 className='text-5xl font-bold mb-4'>Share Your Latest Trip</h1>
-                    <p className='text-xl text-gray-200 '>
-                        {/* Share your quest and let the world know about your adventures! */}
-                        Inspire and help fellow follow travellers by posting your journey from
-                     photos,moments,tips and memories that deserve to be seen</p>
+                <h1 className='text-5xl font-bold mb-4'>Share Your Latest Trip</h1>
+                <p className='text-xl text-gray-200 '>
+                  {/* Share your quest and let the world know about your adventures! */}
+                  Inspire and help fellow follow travellers by posting your journey from
+                  photos,moments,tips and memories that deserve to be seen</p>
 
 
-                </div>
+              </div>
               <button className="w-full bg-orange-500 border border-gray-700 hover:border-orange-400 hover:bg-gray-800/60 text-white py-3 rounded-xl transition-all" onClick={() => router.push('/quest')}> + Create Quest</button>
-              
+
             </div>
           )}
         </div>

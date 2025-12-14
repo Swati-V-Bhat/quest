@@ -37,7 +37,7 @@ const TrendingQuestCard: React.FC<TrendingQuestCardProps> = ({
   const handleClick = () => {
     // Navigate to the quest detail page using questId
     if (questId) {
-      router.push(`/quests/${questId}`);
+      router.push(`/quest/${questId}`);
     } else {
       // Fallback to post if no questId
       router.push(`/post/${postId}`);
