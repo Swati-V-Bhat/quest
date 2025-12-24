@@ -59,7 +59,8 @@ const NavBar = ({ user, onSignOut, className = '', style }: NavBarProps) => {
   useEffect(() => {
     const handleResize = () => {
       setScreenWidth(window.innerWidth);
-      if (window.innerWidth < 1280) {
+      // Collapse sidebar only on smaller screens (below 1024px)
+      if (window.innerWidth < 1024) {
         setIsExpanded(false);
       } else {
         setIsExpanded(true);
@@ -126,7 +127,7 @@ const NavBar = ({ user, onSignOut, className = '', style }: NavBarProps) => {
         ) : (
           <img src='/oq_logo.svg' className="w-[40px] filter invert m-2" alt="OnQuest" />
         )}
-        {screenWidth >= 1280 && (
+        {screenWidth >= 1024 && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-900 transition-colors"
@@ -147,8 +148,8 @@ const NavBar = ({ user, onSignOut, className = '', style }: NavBarProps) => {
               key={item.route}
               onClick={() => handleNavClick(item.route)}
               className={`w-full flex items-center gap-4 px-2 py-2 rounded-full transition-colors relative group ${isActive
-                  ? 'bg-[#ff6900] text-black font-medium'
-                  : 'text-white hover:bg-gray-900'
+                ? 'bg-[#ff6900] text-black font-medium'
+                : 'text-white hover:bg-gray-900'
                 }`}
               title={!isExpanded ? item.label : ''}
             >

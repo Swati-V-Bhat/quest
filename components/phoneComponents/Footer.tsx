@@ -29,7 +29,7 @@ const Footer = () => {
   const [user, setUser] = useState<User | null>(null);
 
   // Get the current URL path
-  const pathname = usePathname(); 
+  const pathname = usePathname();
 
   // Helper function to determine if a link is active
   const isActive = (href: string) => {
@@ -90,9 +90,9 @@ const Footer = () => {
         />
       )}
       {/* Bottom Navigation */}
-      <div className="py-1 fixed -bottom-1 left-0 right-0 border-1 border-black border-t-amber-100 bg-black backdrop-blur-md border-t border-peach-200/20">
+      <div className="py-1 fixed -bottom-1 left-0 right-0 z-50 border-1 border-black border-t-amber-100 bg-black backdrop-blur-md border-t border-peach-200/20">
         <div className="flex items-center justify-between px-6 py-2">
-          
+
           {/* Home Link */}
           <Link href={'/feed'}>
             <div className={`flex flex-col items-center ${getActiveClass('/feed')}`}>
@@ -112,8 +112,8 @@ const Footer = () => {
           </Link>
 
           {/* Post/Create Modal Button (Always White) */}
-          <div 
-            onClick={() => setShowCreateModal(true)} 
+          <div
+            onClick={() => setShowCreateModal(true)}
             className="flex flex-col items-center text-white" // Keep this button white as it's not a route
           >
             <Plus size={25} className="" />
@@ -122,13 +122,13 @@ const Footer = () => {
 
           <Link href={'/quest'}><div className="flex flex-col items-center text-white">
             {/* <Quest size={22} className="" /> */}
-            <img 
-              src="/oq_logo.svg" 
-              alt="OQ logo" 
-              className={`w-6 h-6 object-contain ${isActive('/quest') ? 'filter-orange' : 'filter invert'}`} 
+            <img
+              src="/oq_logo.svg"
+              alt="OQ logo"
+              className={`w-6 h-6 object-contain ${isActive('/quest') ? 'filter-orange' : 'filter invert'}`}
               style={isActive('/quest') ? { filter: 'invert(58%) sepia(80%) saturate(2476%) hue-rotate(358deg) brightness(101%) contrast(99%)' } : {}}
             />
-            <span className={`text-xs ${getActiveClass('/quest')}`}>Quest</span> 
+            <span className={`text-xs ${getActiveClass('/quest')}`}>Quest</span>
           </div></Link>
 
           {/* Account Link */}
