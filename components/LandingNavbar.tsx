@@ -43,7 +43,7 @@ const LandingNavbar = () => {
                         onClick={handleGetStarted}
                         className="bg-[#EA6100] hover:bg-[#d95a00] text-white font-bold py-2 px-6 rounded-full transition-colors duration-300 shadow-lg"
                     >
-                        Get Started
+                        Login
                     </button>
                 </div>
             </nav>

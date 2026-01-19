@@ -1,18 +1,20 @@
 import * as admin from 'firebase-admin';
 
-const SERVICE_ACCOUNT_KEY = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+const SERVICE_ACCOUNT_KEY_BASE64 = process.env.FIREBASE_SERVICE_ACCOUNT_K;
 
 // 1. Handle missing Service Account Key (prevent crash, just warn)
-if (!SERVICE_ACCOUNT_KEY) {
-  console.error("❌ ERROR: FIREBASE_SERVICE_ACCOUNT_KEY is missing.");
+if (!SERVICE_ACCOUNT_KEY_BASE64) {
+  console.error("❌ ERROR: FIREBASE_SERVICE_ACCOUNT_K is missing.");
 }
 
 // 2. Initialize App (Singleton Pattern)
 if (!admin.apps.length) {
   try {
-    if (SERVICE_ACCOUNT_KEY) {
-      const serviceAccount = JSON.parse(SERVICE_ACCOUNT_KEY);
-      
+    if (SERVICE_ACCOUNT_KEY_BASE64) {
+      const serviceAccount = JSON.parse(
+        Buffer.from(SERVICE_ACCOUNT_KEY_BASE64, 'base64').toString('utf-8')
+      );
+
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         // We intentionally DO NOT set storageBucket here to avoid the "undefined" crash.

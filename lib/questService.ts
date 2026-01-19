@@ -423,6 +423,56 @@ const questService = {
   },
 
   /**
+   * Save a quest to the user's saved quests list
+   */
+  async saveQuest(questId: string, uid: string): Promise<{ success: boolean }> {
+    try {
+      const userRef = doc(db, 'users', uid);
+      await updateDoc(userRef, {
+        savedQuestIds: arrayUnion(questId)
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Error saving quest:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Remove a quest from the user's saved quests list
+   */
+  async unsaveQuest(questId: string, uid: string): Promise<{ success: boolean }> {
+    try {
+      const userRef = doc(db, 'users', uid);
+      await updateDoc(userRef, {
+        savedQuestIds: arrayRemove(questId)
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Error unsaving quest:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Check if a quest is saved by the user
+   */
+  async isQuestSaved(questId: string, uid: string): Promise<boolean> {
+    try {
+      const userRef = doc(db, 'users', uid);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) {
+        return false;
+      }
+      const savedQuestIds = userSnap.data().savedQuestIds || [];
+      return savedQuestIds.includes(questId);
+    } catch (error) {
+      console.error('Error checking quest save status:', error);
+      return false;
+    }
+  },
+
+  /**
    * Posts a quest to the public feed
    * Updated to fix permission errors and handle cover image logic
    */

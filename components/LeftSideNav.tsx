@@ -59,8 +59,8 @@ const NavBar = ({ user, onSignOut, className = '', style }: NavBarProps) => {
   useEffect(() => {
     const handleResize = () => {
       setScreenWidth(window.innerWidth);
-      // Collapse sidebar only on smaller screens (below 1024px)
-      if (window.innerWidth < 1024) {
+      // Collapse sidebar only on smaller screens (below 768px / tablet)
+      if (window.innerWidth < 768) {
         setIsExpanded(false);
       } else {
         setIsExpanded(true);
@@ -127,7 +127,7 @@ const NavBar = ({ user, onSignOut, className = '', style }: NavBarProps) => {
         ) : (
           <img src='/oq_logo.svg' className="w-[40px] filter invert m-2" alt="OnQuest" />
         )}
-        {screenWidth >= 1024 && (
+        {screenWidth >= 768 && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-900 transition-colors"

@@ -1,65 +1,60 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { signOut, getCurrentUserData } from '@/lib/authService';
 import {
   User,
-  Bookmark,
-  Check,
-  Calendar,
-  SlidersHorizontal,
-  HelpCircle,
+  Edit2,
   Bell,
-  Lock,
-  Globe,
-  Palette,
-  Eye,
   Shield,
+  HelpCircle,
   ChevronRight,
   LogOut,
+  ArrowLeft,
 } from 'lucide-react';
+import NavBar from '@/components/LeftSideNav';
+import Footer from '@/components/phoneComponents/Footer';
 
 interface MenuItem {
   icon: React.ElementType;
   title: string;
   description: string;
   route: string;
-  badge?: string;
 }
 
 const SettingsPage = () => {
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState('account');
-  const isLoggedIn = true; // Replace with actual auth state
-  const userName = "Harshini";
+  const [user, setUser] = useState<any>(null);
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        try {
+          const data = await getCurrentUserData();
+          setUserData(data);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const accountItems: MenuItem[] = [
     {
-      icon: User,
-      title: 'Profile',
-      description: 'Manage your profile information',
-      route: '/account/profile',
-    },
-    {
-      icon: Bookmark,
-      title: 'Saved Quests',
-      description: 'View your saved adventures',
-      route: '/account/saved-quests',
-      badge: '12',
-    },
-    {
-      icon: Check,
-      title: 'Completed Quests',
-      description: 'Your adventure history',
-      route: '/account/completed-quests',
-      badge: '24',
-    },
-    {
-      icon: Calendar,
-      title: 'Upcoming Quests',
-      description: 'Quests you have planned',
-      route: '/account/upcoming-quests',
-      badge: '3',
+      icon: Edit2,
+      title: 'Edit Profile',
+      description: 'Update your profile information',
+      route: '/settings/edit-profile',
     },
   ];
 
@@ -71,43 +66,19 @@ const SettingsPage = () => {
       route: '/account/notifications',
     },
     {
-      icon: Lock,
+      icon: Shield,
       title: 'Privacy & Security',
-      description: 'Control your privacy settings',
-      route: '/account/privacy',
-    },
-    {
-      icon: Globe,
-      title: 'Language & Region',
-      description: 'Set your language and location',
-      route: '/account/language',
-    },
-    {
-      icon: Palette,
-      title: 'Appearance',
-      description: 'Customize your experience',
-      route: '/account/appearance',
-    },
-    {
-      icon: Eye,
-      title: 'Display',
-      description: 'Adjust display settings',
-      route: '/account/display',
+      description: 'Password, account deletion, privacy',
+      route: '/account/security',
     },
   ];
 
   const supportItems: MenuItem[] = [
     {
       icon: HelpCircle,
-      title: 'Help Center',
-      description: 'Find answers to common questions',
-      route: '/account/help',
-    },
-    {
-      icon: Shield,
-      title: 'Report a Problem',
-      description: 'Let us know if something is wrong',
-      route: '/account/report',
+      title: 'Help & Support',
+      description: 'Get help and contact support',
+      route: '/account/support',
     },
   ];
 
@@ -115,269 +86,199 @@ const SettingsPage = () => {
     router.push(path);
   };
 
-  const handleSignOut = () => {
-    // TODO: Implement sign out logic
-    console.log('Sign out');
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+      router.push('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      setSigningOut(false);
+    }
   };
 
-  if (!isLoggedIn) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-white lg:bg-gray-50">
-        <div className="lg:ml-[280px]">
-          <div className="max-w-4xl mx-auto px-4 lg:px-8 py-8">
-            {/* Header */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">Account</h1>
-              <p className="text-gray-600 mt-2">Sign in to access your account</p>
-            </div>
+      <div className='min-h-screen bg-[#121212] flex items-center justify-center'>
+        <div className='w-16 h-16 border-4 border-[#EA6100] border-t-transparent rounded-full animate-spin' />
+      </div>
+    );
+  }
 
-            {/* Sign In Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-              <div className="max-w-md mx-auto">
-                <div className="w-20 h-20 bg-[#EA6100]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <User className="w-10 h-10 text-[#EA6100]" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Hello, {userName}
-                </h2>
-                <p className="text-gray-600 mb-6">
-                  Start your Quest here! Sign in to unlock all features.
-                </p>
-                <button
-                  onClick={() => console.log('Sign in')}
-                  className="w-full sm:w-auto px-8 py-3 bg-[#EA6100] hover:bg-[#d55600] text-white font-medium rounded-lg transition-colors"
-                >
-                  Sign In
-                </button>
-              </div>
-            </div>
-
-            {/* Quick Settings */}
-            <div className="mt-8 space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900">Settings</h2>
-              {settingsItems.slice(0, 2).map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.route}
-                    onClick={() => navigateTo(item.route)}
-                    className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:border-[#EA6100] transition-colors text-left group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center group-hover:bg-[#EA6100]/10 transition-colors">
-                          <Icon className="w-6 h-6 text-gray-600 group-hover:text-[#EA6100]" />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-900">{item.title}</h3>
-                          <p className="text-sm text-gray-600">{item.description}</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#EA6100]" />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+  if (!user) {
+    return (
+      <div className='min-h-screen bg-[#121212] text-white flex items-center justify-center px-4'>
+        <div className='text-center max-w-md'>
+          <div className='w-20 h-20 bg-[#EA6100]/10 rounded-full flex items-center justify-center mx-auto mb-4'>
+            <User className='w-10 h-10 text-[#EA6100]' />
           </div>
+          <h2 className='text-2xl font-bold text-white mb-2'>Sign in required</h2>
+          <p className='text-gray-400 mb-6'>Please sign in to access settings</p>
+          <button
+            onClick={() => navigateTo('/login')}
+            className='bg-[#EA6100] hover:bg-[#d55600] text-white px-8 py-3 rounded-lg font-medium transition-colors'
+          >
+            Sign In
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white lg:bg-gray-50">
-      {/* Desktop: Account for sidebar */}
-      <div className="lg:ml-[280px]">
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 py-6 lg:py-8">
+    <div className='min-h-screen bg-[#121212]'>
+      {/* Desktop NavBar */}
+      <div className='hidden lg:block'>
+        <NavBar user={user} onSignOut={handleSignOut} />
+      </div>
+
+      {/* Main Content */}
+      <div className='lg:ml-[280px] pb-20 lg:pb-8'>
+        <div className='max-w-2xl mx-auto px-4 py-6'>
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
-            <p className="text-gray-600 mt-2">Manage your account and preferences</p>
-          </div>
-
-          {/* Desktop: Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Left Sidebar: Navigation (Desktop Only) */}
-            <div className="hidden lg:block lg:col-span-1">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sticky top-6">
-                <nav className="space-y-1">
-                  <button
-                    onClick={() => setActiveSection('account')}
-                    className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors ${
-                      activeSection === 'account'
-                        ? 'bg-[#EA6100] text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <User size={18} />
-                      <span className="font-medium">Account</span>
-                    </div>
-                  </button>
-                  
-                  <button
-                    onClick={() => setActiveSection('settings')}
-                    className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors ${
-                      activeSection === 'settings'
-                        ? 'bg-[#EA6100] text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <SlidersHorizontal size={18} />
-                      <span className="font-medium">Settings</span>
-                    </div>
-                  </button>
-                  
-                  <button
-                    onClick={() => setActiveSection('support')}
-                    className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors ${
-                      activeSection === 'support'
-                        ? 'bg-[#EA6100] text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <HelpCircle size={18} />
-                      <span className="font-medium">Support</span>
-                    </div>
-                  </button>
-                </nav>
-
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full text-left px-4 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <LogOut size={18} />
-                      <span className="font-medium">Sign Out</span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Main Content Area */}
-            <div className="lg:col-span-3 space-y-6">
-              {/* Account Section */}
-              {(activeSection === 'account' || window.innerWidth < 1024) && (
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold text-gray-900 lg:hidden">Account</h2>
-                  {accountItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.route}
-                        onClick={() => navigateTo(item.route)}
-                        className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:border-[#EA6100] transition-colors text-left group"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 flex-1">
-                            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center group-hover:bg-[#EA6100]/10 transition-colors flex-shrink-0">
-                              <Icon className="w-6 h-6 text-gray-600 group-hover:text-[#EA6100]" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-medium text-gray-900">{item.title}</h3>
-                                {item.badge && (
-                                  <span className="px-2 py-0.5 bg-[#EA6100] text-white text-xs font-medium rounded-full">
-                                    {item.badge}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-sm text-gray-600 mt-0.5">{item.description}</p>
-                            </div>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#EA6100] flex-shrink-0 ml-2" />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Settings Section */}
-              {(activeSection === 'settings' || window.innerWidth < 1024) && (
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Settings</h2>
-                  {settingsItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.route}
-                        onClick={() => navigateTo(item.route)}
-                        className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:border-[#EA6100] transition-colors text-left group"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 flex-1">
-                            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center group-hover:bg-[#EA6100]/10 transition-colors flex-shrink-0">
-                              <Icon className="w-6 h-6 text-gray-600 group-hover:text-[#EA6100]" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-gray-900">{item.title}</h3>
-                              <p className="text-sm text-gray-600 mt-0.5">{item.description}</p>
-                            </div>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#EA6100] flex-shrink-0 ml-2" />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Support Section */}
-              {(activeSection === 'support' || window.innerWidth < 1024) && (
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Support</h2>
-                  {supportItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.route}
-                        onClick={() => navigateTo(item.route)}
-                        className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:border-[#EA6100] transition-colors text-left group"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 flex-1">
-                            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center group-hover:bg-[#EA6100]/10 transition-colors flex-shrink-0">
-                              <Icon className="w-6 h-6 text-gray-600 group-hover:text-[#EA6100]" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-gray-900">{item.title}</h3>
-                              <p className="text-sm text-gray-600 mt-0.5">{item.description}</p>
-                            </div>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#EA6100] flex-shrink-0 ml-2" />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Sign Out Button (Mobile Only) */}
-              <div className="lg:hidden">
-                <button
-                  onClick={handleSignOut}
-                  className="w-full bg-white rounded-xl shadow-sm border border-red-200 p-5 hover:border-red-400 transition-colors text-left group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center group-hover:bg-red-100 transition-colors">
-                      <LogOut className="w-6 h-6 text-red-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-red-600">Sign Out</h3>
-                      <p className="text-sm text-red-600/70 mt-0.5">Log out of your account</p>
-                    </div>
-                  </div>
-                </button>
-              </div>
+          <div className='flex items-center gap-4 mb-8'>
+            <button
+              onClick={() => router.back()}
+              className='p-2 hover:bg-[#292929] rounded-lg transition-colors'
+            >
+              <ArrowLeft className='text-white' size={24} />
+            </button>
+            <div>
+              <h1 className='text-2xl font-bold text-white'>Settings</h1>
+              <p className='text-gray-400 text-sm'>Manage your account and preferences</p>
             </div>
           </div>
+
+          {/* User Info Card */}
+          <div className='bg-[#1a1a1a] rounded-xl p-4 mb-6 border border-gray-800'>
+            <div className='flex items-center gap-4'>
+              <img
+                src={userData?.photoURL || user?.photoURL || '/default-avatar.png'}
+                alt='Profile'
+                className='w-14 h-14 rounded-full object-cover'
+              />
+              <div className='flex-1'>
+                <h2 className='text-white font-semibold'>
+                  {userData?.displayName || user?.displayName || 'User'}
+                </h2>
+                <p className='text-gray-400 text-sm'>{user?.email}</p>
+              </div>
+              <button
+                onClick={() => navigateTo('/account')}
+                className='text-[#EA6100] text-sm font-medium hover:underline'
+              >
+                View Profile
+              </button>
+            </div>
+          </div>
+
+          {/* Account Section */}
+          <div className='mb-6'>
+            <h3 className='text-gray-400 text-sm font-medium mb-3 px-1'>ACCOUNT</h3>
+            <div className='bg-[#1a1a1a] rounded-xl border border-gray-800 overflow-hidden'>
+              {accountItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.route}
+                    onClick={() => navigateTo(item.route)}
+                    className={`w-full flex items-center justify-between p-4 hover:bg-[#292929] transition-colors ${index < accountItems.length - 1 ? 'border-b border-gray-800' : ''
+                      }`}
+                  >
+                    <div className='flex items-center gap-4'>
+                      <div className='w-10 h-10 bg-[#292929] rounded-lg flex items-center justify-center'>
+                        <Icon className='text-[#EA6100]' size={20} />
+                      </div>
+                      <div className='text-left'>
+                        <h3 className='text-white font-medium'>{item.title}</h3>
+                        <p className='text-gray-400 text-sm'>{item.description}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className='text-gray-400' size={20} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Settings Section */}
+          <div className='mb-6'>
+            <h3 className='text-gray-400 text-sm font-medium mb-3 px-1'>PREFERENCES</h3>
+            <div className='bg-[#1a1a1a] rounded-xl border border-gray-800 overflow-hidden'>
+              {settingsItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.route}
+                    onClick={() => navigateTo(item.route)}
+                    className={`w-full flex items-center justify-between p-4 hover:bg-[#292929] transition-colors ${index < settingsItems.length - 1 ? 'border-b border-gray-800' : ''
+                      }`}
+                  >
+                    <div className='flex items-center gap-4'>
+                      <div className='w-10 h-10 bg-[#292929] rounded-lg flex items-center justify-center'>
+                        <Icon className='text-[#EA6100]' size={20} />
+                      </div>
+                      <div className='text-left'>
+                        <h3 className='text-white font-medium'>{item.title}</h3>
+                        <p className='text-gray-400 text-sm'>{item.description}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className='text-gray-400' size={20} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Support Section */}
+          <div className='mb-6'>
+            <h3 className='text-gray-400 text-sm font-medium mb-3 px-1'>SUPPORT</h3>
+            <div className='bg-[#1a1a1a] rounded-xl border border-gray-800 overflow-hidden'>
+              {supportItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.route}
+                    onClick={() => navigateTo(item.route)}
+                    className={`w-full flex items-center justify-between p-4 hover:bg-[#292929] transition-colors ${index < supportItems.length - 1 ? 'border-b border-gray-800' : ''
+                      }`}
+                  >
+                    <div className='flex items-center gap-4'>
+                      <div className='w-10 h-10 bg-[#292929] rounded-lg flex items-center justify-center'>
+                        <Icon className='text-[#EA6100]' size={20} />
+                      </div>
+                      <div className='text-left'>
+                        <h3 className='text-white font-medium'>{item.title}</h3>
+                        <p className='text-gray-400 text-sm'>{item.description}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className='text-gray-400' size={20} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sign Out Button */}
+          <button
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className='w-full bg-red-600/10 hover:bg-red-600/20 border border-red-600/30 text-red-500 font-medium py-4 rounded-xl transition-colors flex items-center justify-center gap-3'
+          >
+            <LogOut size={20} />
+            {signingOut ? 'Signing out...' : 'Sign Out'}
+          </button>
+
+          {/* App Version */}
+          <p className='text-center text-gray-500 text-sm mt-6'>
+            OnQuest v1.0.0
+          </p>
         </div>
+      </div>
+
+      {/* Mobile Footer */}
+      <div className='lg:hidden'>
+        <Footer />
       </div>
     </div>
   );

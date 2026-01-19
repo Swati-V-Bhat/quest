@@ -14,7 +14,7 @@ import { PostQuestModal } from '@/components/QuestPopups';
 import { LocationInput } from '@/components/common/LocationInput';
 import { Heart, MessageCircle, Bookmark, MoreHorizontal, Flag } from 'lucide-react';
 import { FaHeart } from 'react-icons/fa';
-import { savePost, unsavePost, reportPost } from '@/lib/postService';
+import { reportPost } from '@/lib/postService';
 import { Quest } from '../../../types/index'
 import { arrayRemove, arrayUnion, doc, getDoc, increment, updateDoc } from 'firebase/firestore';
 import { VideoGenerationModal } from '@/components/quest/VideoGenerationModal';
@@ -22,7 +22,9 @@ import { Video } from 'lucide-react';
 import OnQuestPeopleSection from '@/components/quest/OnQuestPeopleSection';
 import ShareModal from '@/components/quest/ShareModal';
 import { compressAndUploadImage } from '@/lib/imageService';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Images } from 'lucide-react';
+import { CarouselGeneratorModal } from '@/components/quest/CarouselGeneratorModal';
+import { StoryGeneratorModal } from '@/components/quest/StoryGeneratorModal';
 
 interface ActivityLocation {
   name: string;
@@ -323,6 +325,15 @@ const QuestViewPage = () => {
   const [reportDescription, setReportDescription] = useState('');
   const [showVideoModal, setShowVideoModal] = useState(false);
 
+  // Instagram Carousel Generator
+  const [showCarouselModal, setShowCarouselModal] = useState(false);
+
+  // Instagram Story Generator
+  const [showStoryModal, setShowStoryModal] = useState(false);
+
+  // Owner 3-dot menu for generation options
+  const [showOwnerMenu, setShowOwnerMenu] = useState(false);
+
 
   // Extract all images from the quest for the modal
   const questImages = React.useMemo(() => {
@@ -378,12 +389,9 @@ const QuestViewPage = () => {
             setIsLiked(postData.likedBy?.includes(user.uid) || false);
           }
 
-          const userRef = doc(db, 'users', user.uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            const userData = userSnap.data();
-            setIsSaved(userData.savedPosts?.includes(quest.associatedPostId) || false);
-          }
+          // Check if quest is saved using questId, not postId
+          const isSavedResult = await questService.isQuestSaved(quest.id!, user.uid);
+          setIsSaved(isSavedResult);
         } catch (error) {
           console.error('Error fetching post stats:', error);
         }
@@ -781,17 +789,17 @@ const QuestViewPage = () => {
   };
 
   const handleSaveQuest = async () => {
-    if (!user?.uid || !quest?.associatedPostId) return;
+    if (!user?.uid || !quest?.id) return;
 
     try {
       if (isSaved) {
-        await unsavePost(quest.associatedPostId, user.uid);
+        await questService.unsaveQuest(quest.id, user.uid);
         setIsSaved(false);
         showToast('Removed from saved', 'info');
       } else {
-        await savePost(quest.associatedPostId, user.uid);
+        await questService.saveQuest(quest.id, user.uid);
         setIsSaved(true);
-        showToast('Saved successfully', 'success');
+        showToast('Quest saved! ✓', 'success');
       }
     } catch (error) {
       console.error('Error toggling save:', error);
@@ -891,14 +899,72 @@ const QuestViewPage = () => {
                 /* OWNER VIEW - Share and Edit */
                 <>
 
+                  {/* Create Content 3-dot Menu - Only show when NOT in edit mode */}
                   {!isEditMode && (
-                    <button
-                      onClick={() => setShowVideoModal(true)}
-                      className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-orange-500 via-purple-500 to-pink-600 hover:from-orange-600 hover:via-purple-600 hover:to-pink-700 rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 text-sm font-medium"
-                    >
-                      <Video size={18} className="animate-pulse" />
-                      <span className="hidden md:inline">Generate Video</span>
-                    </button>
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowOwnerMenu(!showOwnerMenu)}
+                        className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 hover:from-orange-600 hover:via-pink-600 hover:to-purple-700 rounded-lg transition-all shadow-lg hover:shadow-xl text-sm font-medium"
+                      >
+                        <Images size={18} />
+                        <span className="hidden md:inline">Create</span>
+                        <MoreHorizontal size={16} />
+                      </button>
+
+                      {/* Owner Create Menu Dropdown */}
+                      {showOwnerMenu && (
+                        <>
+                          {/* Backdrop to close menu on outside click */}
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setShowOwnerMenu(false)}
+                          />
+                          <div className="absolute right-0 mt-2 w-56 bg-gray-900 rounded-lg border border-gray-700 shadow-xl z-50">
+                            <button
+                              onClick={() => {
+                                setShowVideoModal(true);
+                                setShowOwnerMenu(false);
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition-colors text-white text-left rounded-t-lg"
+                            >
+                              <Video size={18} className="text-purple-400" />
+                              <div>
+                                <span className="block font-medium">Generate Video</span>
+                                <span className="text-xs text-gray-400">Reels/TikTok format</span>
+                              </div>
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setShowCarouselModal(true);
+                                setShowOwnerMenu(false);
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition-colors text-white text-left"
+                            >
+                              <Images size={18} className="text-orange-400" />
+                              <div>
+                                <span className="block font-medium">Instagram Carousel</span>
+                                <span className="text-xs text-gray-400">Multiple slides (4:5)</span>
+                              </div>
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setShowStoryModal(true);
+                                setShowOwnerMenu(false);
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition-colors text-white text-left rounded-b-lg"
+                            >
+                              <Share2 size={18} className="text-pink-400" />
+                              <div>
+                                <span className="block font-medium">Instagram Story</span>
+                                <span className="text-xs text-gray-400">Scrapbook style (9:16)</span>
+                              </div>
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   )}
 
                   {/* Owner Stats - Interactive Like Button */}
@@ -910,15 +976,15 @@ const QuestViewPage = () => {
                         : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
                         }`}
                     >
-                      <FaHeart size={18} fill={isLiked ? 'currentColor' : 'none'} stroke={isLiked ? 'none' : 'currentColor'} strokeWidth={isLiked ? '0' : '20'} />
+                      <FaHeart size={18} className={isLiked ? 'fill-current' : ''} />
                       <span className="hidden md:inline">{likeCount}</span>
                     </button>
                   )}
 
 
 
-                  {/* Share Button - Only show if posted */}
-                  {quest.isPostedToFeed && (
+                  {/* Share Button - Only show if posted and NOT in edit mode */}
+                  {quest.isPostedToFeed && !isEditMode && (
                     <button
                       onClick={() => setIsShareModalOpen(true)}
                       className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors text-sm"
@@ -970,7 +1036,7 @@ const QuestViewPage = () => {
                       : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
                       }`}
                   >
-                    <FaHeart size={22} fill={isLiked ? 'currentColor' : 'none'} />
+                    <FaHeart size={18} className={isLiked ? 'fill-current' : ''} />
                     <span className="hidden md:inline">{likeCount}</span>
                   </button>
 
@@ -981,7 +1047,7 @@ const QuestViewPage = () => {
                       : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
                       }`}
                   >
-                    <Bookmark size={16} fill={isSaved ? 'currentColor' : 'none'} />
+                    <Bookmark size={18} fill={isSaved ? 'currentColor' : 'none'} />
                     <span className="hidden md:inline">Save</span>
                   </button>
 
@@ -990,7 +1056,7 @@ const QuestViewPage = () => {
                       onClick={() => setShowMoreMenu(!showMoreMenu)}
                       className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors text-sm"
                     >
-                      <MoreHorizontal size={16} />
+                      <MoreHorizontal size={18} />
                     </button>
 
                     {/* More Menu Dropdown */}
@@ -1161,7 +1227,7 @@ const QuestViewPage = () => {
                 <div key={dayIndex} className="mb-8">
                   <button
                     onClick={() => toggleDayCollapse(dayIndex)}
-                    className="flex items-center gap-3 mb-4 w-full text-left hover:bg-gray-900 p-2 rounded-lg transition-colors"
+                    className="flex items-center gap-3 mb-4 w-full text-left bg-gray-900/50 border border-gray-700 hover:border-gray-600 p-4 rounded-xl transition-colors"
                   >
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center font-bold text-sm shadow-lg">
                       {day.day}
@@ -1251,7 +1317,7 @@ const QuestViewPage = () => {
                 <div key={dayIndex} className="mb-8">
                   <button
                     onClick={() => toggleDayCollapse(dayIndex)}
-                    className="flex items-center gap-3 mb-4 w-full text-left hover:bg-gray-900 p-2 rounded-lg transition-colors"
+                    className="flex items-center gap-3 mb-4 w-full text-left bg-gray-900/50 border border-gray-700 hover:border-gray-600 p-4 rounded-xl transition-colors"
                   >
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center font-bold text-sm shadow-lg">
                       {day.day}
@@ -1344,7 +1410,7 @@ const QuestViewPage = () => {
               <div key={dayIndex} className="mb-8">
                 <button
                   onClick={() => toggleDayCollapse(dayIndex)}
-                  className="flex items-center gap-3 mb-6 w-full text-left hover:bg-gray-900 p-3 rounded-lg transition-colors"
+                  className="flex items-center gap-3 mb-6 w-full text-left bg-gray-900/50 border border-gray-700 hover:border-gray-600 p-4 rounded-xl transition-colors"
                 >
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center font-bold shadow-lg">
                     {day.day}
@@ -1506,6 +1572,7 @@ const QuestViewPage = () => {
         questImages={questImages}
       />
 
+      {/* Video Generation Modal */}
       {showVideoModal && user && quest && (
         <VideoGenerationModal
           isOpen={showVideoModal}
@@ -1520,6 +1587,45 @@ const QuestViewPage = () => {
             title: quest.title
           }}
           uid={user.uid}
+        />
+      )}
+
+      {/* Instagram Story Generator Modal - Coming Soon */}
+      {showStoryModal && user && quest && (
+        <StoryGeneratorModal
+          isOpen={showStoryModal}
+          onClose={() => setShowStoryModal(false)}
+          questData={{
+            questId: questId,
+            title: quest.title || quest.destination,
+            destination: quest.destination,
+            creatorName: user.displayName || 'Traveler',
+            creatorProfilePic: user.photoURL || '',
+            startDate: quest.startDate,
+            endDate: quest.endDate,
+            coverImageUrl: quest.coverImageUrl || '',
+            itinerary: quest.itinerary
+          }}
+        />
+      )}
+
+      {/* Instagram Carousel Generator Modal */}
+      {showCarouselModal && user && quest && (
+        <CarouselGeneratorModal
+          isOpen={showCarouselModal}
+          onClose={() => setShowCarouselModal(false)}
+          questData={{
+            questId: questId,
+            title: quest.title || quest.destination,
+            destination: quest.destination,
+            creatorName: user.displayName || 'Traveler',
+            creatorProfilePic: user.photoURL || '',
+            startDate: quest.startDate,
+            endDate: quest.endDate,
+            coverImageUrl: quest.coverImageUrl || '',
+            totalDays: quest.itinerary?.days?.length || 1,
+            itinerary: quest.itinerary
+          }}
         />
       )}
 

@@ -2,6 +2,7 @@ import { Inter, Montserrat } from 'next/font/google'
 import Script from 'next/script'
 import '@/app/globals.css'
 import { GamificationProvider } from '@/components/gamification/GamificationProvider'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 const inter = Inter({ subsets: ['latin'] })
 const mont = Montserrat({
@@ -26,9 +27,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={mont.variable}>
       <body className={inter.className}>
-        <GamificationProvider>
-          {children}
-        </GamificationProvider>
+        <ErrorBoundary>
+          <GamificationProvider>
+            {children}
+          </GamificationProvider>
+        </ErrorBoundary>
 
         {/* Hotjar Tracking Code */}
         <Script

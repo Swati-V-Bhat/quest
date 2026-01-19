@@ -6,8 +6,7 @@ import { FcGoogle } from 'react-icons/fc';
 import { MdFamilyRestroom, MdOutlineAttachMoney } from 'react-icons/md';
 import { RiVipCrownLine } from 'react-icons/ri';
 import { FaCamera } from 'react-icons/fa';
-import { signUpWithEmail, signInWithGoogle, signInWithEmail } from '@/lib/authService';
-import { sendEmailVerification } from 'firebase/auth';
+import { signUpWithEmail, signInWithGoogle, signInWithEmail, sendEmailVerificationCode, verifyEmailCode, getCurrentUserData } from '@/lib/authService';
 
 // Types
 interface OnboardingData {
@@ -61,6 +60,9 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose, isSignIn = f
     // Step management
     const [currentStep, setCurrentStep] = useState(1);
     const [isSignInMode, setIsSignInMode] = useState(isSignIn);
+    const [showVerification, setShowVerification] = useState(false);
+    const [verificationCode, setVerificationCode] = useState('');
+    const [verificationSent, setVerificationSent] = useState(false);
 
     // Step 1: Auth state
     const [email, setEmail] = useState('');
@@ -87,7 +89,14 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose, isSignIn = f
             setIsLoading(true);
             const user = await signInWithGoogle();
             if (user) {
-                setCurrentStep(2);
+                // Check if user has already completed onboarding
+                const userData = await getCurrentUserData() as any;
+                if (userData?.onboardingCompleted) {
+                    onClose();
+                    router.push('/feed');
+                } else {
+                    setCurrentStep(2);
+                }
             }
         } catch (err: any) {
             setError(err.message || 'Google sign-in failed');
@@ -117,15 +126,56 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose, isSignIn = f
                 onClose();
                 router.push('/feed');
             } else {
-                const avatar = selectedAvatar || AVATAR_OPTIONS[Math.floor(Math.random() * AVATAR_OPTIONS.length)];
-                const user = await signUpWithEmail(email, password, displayName, avatar);
-                if (user) {
-                    await sendEmailVerification(user);
-                    setCurrentStep(2);
-                }
+                // Send verification code before creating account
+                await sendEmailVerificationCode(email);
+                setVerificationSent(true);
+                setShowVerification(true);
             }
         } catch (err: any) {
             setError(err.message || 'Authentication failed');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Handle verification code submission
+    const handleVerifyCode = async () => {
+        if (!verificationCode || verificationCode.length !== 6) {
+            setError('Please enter the 6-digit code');
+            return;
+        }
+
+        try {
+            setError('');
+            setIsLoading(true);
+
+            // Verify the code
+            await verifyEmailCode(email, verificationCode);
+
+            // Code verified, now create the account
+            const avatar = selectedAvatar || AVATAR_OPTIONS[Math.floor(Math.random() * AVATAR_OPTIONS.length)];
+            const user = await signUpWithEmail(email, password, displayName, avatar);
+            if (user) {
+                setShowVerification(false);
+                setCurrentStep(2);
+            }
+        } catch (err: any) {
+            setError(err.message || 'Verification failed');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Resend verification code
+    const handleResendCode = async () => {
+        try {
+            setError('');
+            setIsLoading(true);
+            await sendEmailVerificationCode(email);
+            setError('');
+            setVerificationCode('');
+        } catch (err: any) {
+            setError(err.message || 'Failed to resend code');
         } finally {
             setIsLoading(false);
         }
@@ -193,125 +243,188 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose, isSignIn = f
     );
 
     // Render Step 1: Create Account (with Google + Avatar)
-    const renderStep1 = () => (
-        <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900">
-                {isSignInMode ? 'Log in to OnQuest' : 'Create Account'}
-            </h2>
+    const renderStep1 = () => {
+        // Show verification code input if code was sent
+        if (showVerification) {
+            return (
+                <div className="space-y-4">
+                    <h2 className="text-xl font-semibold text-gray-900">Verify Your Email</h2>
+                    <p className="text-gray-600 text-sm">
+                        We've sent a 6-digit code to <strong>{email}</strong>
+                    </p>
 
-            {/* Google Button - First option */}
-            <button
-                onClick={handleGoogleSignIn}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-lg h-12 hover:bg-gray-50 transition-colors shadow-sm"
-            >
-                {isLoading ? 'Signing in...' : (
-                    <>
-                        <FcGoogle size={22} />
-                        <span className="font-medium text-gray-700">
-                            {isSignInMode ? 'Log in with Google' : 'Sign up with Google'}
-                        </span>
-                    </>
-                )}
-            </button>
-
-            {/* Divider */}
-            <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-gray-200"></div>
-                <span className="text-gray-400 text-sm">or</span>
-                <div className="flex-1 h-px bg-gray-200"></div>
-            </div>
-
-            {/* Name input (signup only) */}
-            {!isSignInMode && (
-                <input
-                    type="text"
-                    className="w-full h-11 border border-gray-300 rounded-lg px-4 focus:ring-2 focus:ring-[#EA6100] focus:border-transparent outline-none text-sm"
-                    placeholder="Full Name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                />
-            )}
-
-            {/* Avatar selector (signup only) */}
-            {!isSignInMode && (
-                <div>
-                    <p className="text-gray-600 text-sm mb-2">Choose your avatar:</p>
-                    <div className="flex gap-2 items-center flex-wrap">
-                        {AVATAR_OPTIONS.map((avatar, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => { setSelectedAvatar(avatar); setUploadedAvatar(null); }}
-                                className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-all ${selectedAvatar === avatar && !uploadedAvatar
-                                    ? 'border-[#EA6100] ring-2 ring-[#EA6100]'
-                                    : 'border-gray-200 hover:border-gray-400'
-                                    }`}
-                            >
-                                <img src={avatar} alt={`Avatar ${idx + 1}`} className="w-full h-full object-cover" />
-                            </button>
-                        ))}
-                        {/* Custom upload */}
-                        <label className="w-10 h-10 rounded-full border-2 border-dashed border-gray-300 hover:border-[#EA6100] flex items-center justify-center cursor-pointer transition-colors">
-                            {uploadedAvatar ? (
-                                <img src={uploadedAvatar} alt="Custom" className="w-full h-full object-cover rounded-full" />
-                            ) : (
-                                <FaCamera size={14} className="text-gray-400" />
-                            )}
-                            <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
-                        </label>
+                    {/* OTP Input */}
+                    <div className="flex justify-center gap-2">
+                        <input
+                            type="text"
+                            maxLength={6}
+                            className="w-full h-14 border-2 border-gray-300 rounded-lg px-4 text-center text-2xl font-bold tracking-[0.5em] focus:ring-2 focus:ring-[#EA6100] focus:border-transparent outline-none"
+                            placeholder="000000"
+                            value={verificationCode}
+                            onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        />
                     </div>
+
+                    {/* Verify Button */}
+                    <button
+                        onClick={handleVerifyCode}
+                        disabled={isLoading || verificationCode.length !== 6}
+                        className={`w-full h-11 rounded-lg font-medium transition-all text-sm ${verificationCode.length === 6
+                            ? 'bg-[#EA6100] hover:bg-[#d55800] text-white'
+                            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                            }`}
+                    >
+                        {isLoading ? 'Verifying...' : 'Verify & Continue'}
+                    </button>
+
+                    {/* Resend Code */}
+                    <p className="text-center text-sm text-gray-500">
+                        Didn't receive the code?{' '}
+                        <button
+                            onClick={handleResendCode}
+                            disabled={isLoading}
+                            className="text-[#EA6100] font-medium hover:underline"
+                        >
+                            Resend Code
+                        </button>
+                    </p>
+
+                    {/* Back Button */}
+                    <button
+                        onClick={() => {
+                            setShowVerification(false);
+                            setVerificationCode('');
+                            setError('');
+                        }}
+                        className="w-full text-gray-500 text-sm hover:text-gray-700"
+                    >
+                        ← Back to signup
+                    </button>
                 </div>
-            )}
+            );
+        }
 
-            {/* Email input */}
-            <input
-                type="email"
-                className="w-full h-11 border border-gray-300 rounded-lg px-4 focus:ring-2 focus:ring-[#EA6100] focus:border-transparent outline-none text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
+        // Show normal signup/signin form
+        return (
+            <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-gray-900">
+                    {isSignInMode ? 'Log in to OnQuest' : 'Create Account'}
+                </h2>
 
-            {/* Password input */}
-            <input
-                type="password"
-                className="w-full h-11 border border-gray-300 rounded-lg px-4 focus:ring-2 focus:ring-[#EA6100] focus:border-transparent outline-none text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-            />
-
-            {/* Submit button */}
-            <button
-                onClick={handleEmailAuth}
-                disabled={isLoading || !email || !password || (!isSignInMode && !displayName)}
-                className={`w-full h-11 rounded-lg font-medium transition-all text-sm ${email && password && (isSignInMode || displayName)
-                    ? 'bg-[#EA6100] hover:bg-[#d55800] text-white'
-                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                    }`}
-            >
-                {isLoading ? 'Processing...' : isSignInMode ? 'Sign In' : 'Sign Up'}
-            </button>
-
-            {/* Toggle sign in/up */}
-            <p className="text-center text-sm">
-                {isSignInMode ? "Don't have an account? " : 'Already have an account? '}
+                {/* Google Button - First option */}
                 <button
-                    onClick={() => { setIsSignInMode(!isSignInMode); setError(''); }}
-                    className="text-[#EA6100] font-medium hover:underline"
+                    onClick={handleGoogleSignIn}
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-lg h-12 hover:bg-gray-50 transition-colors shadow-sm"
                 >
-                    {isSignInMode ? 'Sign Up' : 'Sign In'}
+                    {isLoading ? 'Signing in...' : (
+                        <>
+                            <FcGoogle size={22} />
+                            <span className="font-medium text-gray-700">
+                                Continue with Google
+                            </span>
+                        </>
+                    )}
                 </button>
-            </p>
 
-            {/* Terms */}
-            <p className="text-center text-xs text-gray-500">
-                By proceeding, you agree to our{' '}
-                <span className="text-[#EA6100] cursor-pointer hover:underline">T&C</span> and{' '}
-                <span className="text-[#EA6100] cursor-pointer hover:underline">Privacy policy</span>
-            </p>
-        </div>
-    );
+                {/* Divider */}
+                <div className="flex items-center gap-3">
+                    <div className="flex-1 h-px bg-gray-200"></div>
+                    <span className="text-gray-400 text-sm">or</span>
+                    <div className="flex-1 h-px bg-gray-200"></div>
+                </div>
+
+                {/* Name input (signup only) */}
+                {!isSignInMode && (
+                    <input
+                        type="text"
+                        className="w-full h-11 border border-gray-300 rounded-lg px-4 focus:ring-2 focus:ring-[#EA6100] focus:border-transparent outline-none text-sm"
+                        placeholder="Full Name"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                    />
+                )}
+
+                {/* Avatar selector (signup only) */}
+                {!isSignInMode && (
+                    <div>
+                        <p className="text-gray-600 text-sm mb-2">Choose your avatar:</p>
+                        <div className="flex gap-2 items-center flex-wrap">
+                            {AVATAR_OPTIONS.map((avatar, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => { setSelectedAvatar(avatar); setUploadedAvatar(null); }}
+                                    className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-all ${selectedAvatar === avatar && !uploadedAvatar
+                                        ? 'border-[#EA6100] ring-2 ring-[#EA6100]'
+                                        : 'border-gray-200 hover:border-gray-400'
+                                        }`}
+                                >
+                                    <img src={avatar} alt={`Avatar ${idx + 1}`} className="w-full h-full object-cover" />
+                                </button>
+                            ))}
+                            {/* Custom upload */}
+                            <label className="w-10 h-10 rounded-full border-2 border-dashed border-gray-300 hover:border-[#EA6100] flex items-center justify-center cursor-pointer transition-colors">
+                                {uploadedAvatar ? (
+                                    <img src={uploadedAvatar} alt="Custom" className="w-full h-full object-cover rounded-full" />
+                                ) : (
+                                    <FaCamera size={14} className="text-gray-400" />
+                                )}
+                                <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+                            </label>
+                        </div>
+                    </div>
+                )}
+
+                {/* Email input */}
+                <input
+                    type="email"
+                    className="w-full h-11 border border-gray-300 rounded-lg px-4 focus:ring-2 focus:ring-[#EA6100] focus:border-transparent outline-none text-sm"
+                    placeholder="Email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+
+                {/* Password input */}
+                <input
+                    type="password"
+                    className="w-full h-11 border border-gray-300 rounded-lg px-4 focus:ring-2 focus:ring-[#EA6100] focus:border-transparent outline-none text-sm"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+
+                {/* Submit button */}
+                <button
+                    onClick={handleEmailAuth}
+                    disabled={isLoading || !email || !password || (!isSignInMode && !displayName)}
+                    className={`w-full h-11 rounded-lg font-medium transition-all text-sm ${email && password && (isSignInMode || displayName)
+                        ? 'bg-[#EA6100] hover:bg-[#d55800] text-white'
+                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        }`}
+                >
+                    {isLoading ? 'Processing...' : isSignInMode ? 'Sign In' : 'Sign Up'}
+                </button>
+
+                {/* Toggle sign in/up */}
+                <p className="text-center text-sm">
+                    {isSignInMode ? "Don't have an account? " : 'Already have an account? '}
+                    <button
+                        onClick={() => { setIsSignInMode(!isSignInMode); setError(''); }}
+                        className="text-[#EA6100] font-medium hover:underline"
+                    >
+                        {isSignInMode ? 'Sign Up' : 'Sign In'}
+                    </button>
+                </p>
+
+                {/* Terms */}
+                <p className="text-center text-xs text-gray-500">
+                    By proceeding, you agree to our{' '}
+                    <span className="text-[#EA6100] cursor-pointer hover:underline">T&C</span> and{' '}
+                    <span className="text-[#EA6100] cursor-pointer hover:underline">Privacy policy</span>
+                </p>
+            </div>
+        );
+    };
 
     // Render Step 2: Personalize Experience
     const renderStep2 = () => (

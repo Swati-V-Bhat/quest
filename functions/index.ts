@@ -63,3 +63,34 @@ exports.onQuestDeleted = functions.firestore
       }
     });
 
+
+/**
+ * Triggered when an email verification document is created.
+ * Sends a verification code email to the user.
+ * Configure with: firebase functions:config:set email.user="your@gmail.com" email.pass="app-password"
+ */
+exports.onEmailVerificationCreated = functions.firestore
+    .document("emailVerifications/{email}")
+    .onCreate(async (snap: { data: () => any; id: string; }) => {
+      const data = snap.data();
+      const email = data.email;
+      const code = data.code;
+
+      // Log for development (remove in production)
+      console.log(`Verification code for ${email}: ${code}`);
+
+      // TODO: Uncomment and configure for production email sending
+      // const nodemailer = require('nodemailer');
+      // const transporter = nodemailer.createTransport({
+      //   service: 'gmail',
+      //   auth: { user: functions.config().email?.user, pass: functions.config().email?.pass }
+      // });
+      // await transporter.sendMail({
+      //   from: '"OnQuest" <noreply@onquest.app>',
+      //   to: email,
+      //   subject: 'Your OnQuest Verification Code',
+      //   html: `<h2>Your code: <strong>${code}</strong></h2><p>Expires in 10 minutes.</p>`
+      // });
+
+      console.log(`Verification request logged for: ${email}`);
+    });
