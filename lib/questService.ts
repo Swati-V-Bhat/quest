@@ -168,6 +168,12 @@ const questService = {
       }
 
       await runTransaction(db, async (transaction) => {
+        // First, read the user document to ensure the transaction includes it
+        const userSnap = await transaction.get(userRef);
+        if (!userSnap.exists()) {
+          throw new Error('User document not found. Please ensure your profile is set up.');
+        }
+
         // 1. Create the Quest document
         const questDocument = {
           ...questData,
@@ -184,6 +190,7 @@ const questService = {
           isPostedToFeed: false,
           associatedPostId: null,
           isAiGenerated: isAiGenerated, // Track if AI-generated
+          type: isAiGenerated ? 'ai_generated' : 'manual', // Add type field for rules
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         };
@@ -203,10 +210,13 @@ const questService = {
         transaction.set(newChatRef, chatDocument);
 
         // 3. Add the new questId to the user's profile
+        // Use set with merge to handle cases where questIds doesn't exist
         console.log('Updating user document with questId:', questId);
-        transaction.update(userRef, {
-          questIds: arrayUnion(questId)
-        });
+        const currentQuestIds = userSnap.data()?.questIds || [];
+        transaction.set(userRef, {
+          questIds: [...currentQuestIds, questId],
+          updatedAt: serverTimestamp()
+        }, { merge: true });
       });
 
       console.log('Transaction completed successfully');
