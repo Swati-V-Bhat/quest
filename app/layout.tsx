@@ -3,6 +3,7 @@ import Script from 'next/script'
 import '@/app/globals.css'
 import { GamificationProvider } from '@/components/gamification/GamificationProvider'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import { Analytics } from '@vercel/analytics/react'
 
 const inter = Inter({ subsets: ['latin'] })
 const mont = Montserrat({
@@ -31,6 +32,7 @@ export default function RootLayout({
           <GamificationProvider>
             {children}
           </GamificationProvider>
+          <Analytics />
         </ErrorBoundary>
 
         {/* Hotjar Tracking Code */}

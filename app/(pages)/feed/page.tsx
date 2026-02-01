@@ -35,6 +35,7 @@ import EditPostModal from '@/components/Home/EditPostModal';
 import MobilePostMenu from '@/components/Home/PostMenu';
 import { getLevelInfo, getUserBadges } from '@/lib/firebaseSerive';
 import CommentSection from '@/components/feed/CommentSection';
+import LazyImage from '@/components/LazyImage';
 
 
 // Helper function to generate username from display name
@@ -550,26 +551,27 @@ const Feed = () => {
     }
   };
 
+  // Move loadInitialPosts to component scope so it can be called from callbacks
+  const loadInitialPosts = async () => {
+    if (!userData) return;
+
+    try {
+      setInitialLoading(true);
+      const result = await getPaginatedPosts(null, 5);
+
+      const postsWithSavedStatus = withSavedStatus(result.posts);
+
+      setPosts(postsWithSavedStatus);
+      setLastVisible(result.lastVisible);
+      setHasMore(result.hasMore);
+    } catch (error) {
+      console.error('Error loading initial posts:', error);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadInitialPosts = async () => {
-      if (!userData) return;
-
-      try {
-        setInitialLoading(true);
-        const result = await getPaginatedPosts(null, 5);
-
-        const postsWithSavedStatus = withSavedStatus(result.posts);
-
-        setPosts(postsWithSavedStatus);
-        setLastVisible(result.lastVisible);
-        setHasMore(result.hasMore);
-      } catch (error) {
-        console.error('Error loading initial posts:', error);
-      } finally {
-        setInitialLoading(false);
-      }
-    };
-
     loadInitialPosts();
   }, [userData]);
 
@@ -649,7 +651,7 @@ const Feed = () => {
         const updatedPost = await getDoc(postRef);
         if (updatedPost.exists()) {
           const data = updatedPost.data();
-          const { calculateEngagementScore } = await import('@/lib/postService');
+          const { calculateEngagementScore } = await import('@/lib/engagementService');
           const newScore = calculateEngagementScore(
             data.likeCount || 0,
             data.commentCount || 0,
@@ -667,7 +669,7 @@ const Feed = () => {
         const updatedPost = await getDoc(postRef);
         if (updatedPost.exists()) {
           const data = updatedPost.data();
-          const { calculateEngagementScore } = await import('@/lib/postService');
+          const { calculateEngagementScore } = await import('@/lib/engagementService');
           const newScore = calculateEngagementScore(
             data.likeCount || 0,
             data.commentCount || 0,
@@ -1010,7 +1012,7 @@ const Feed = () => {
 
         {postImages && postImages.length > 0 && (
           <div className="px-4 pb-3 relative">
-            <img
+            <LazyImage
               src={postImages[currentImageIdx]?.large || postImages[currentImageIdx]}
               alt={`Post content ${currentImageIdx + 1}`}
               className="w-full rounded-lg object-contain max-h-[500px] bg-gray-800"
@@ -1451,7 +1453,7 @@ const MobilePostCard = ({
 
       {postImages && postImages.length > 0 && (
         <div className="mb-3 relative rounded-lg overflow-hidden">
-          <img
+          <LazyImage
             src={postImages[currentImageIdx]?.large || postImages[currentImageIdx]}
             alt={`Post content ${currentImageIdx + 1}`}
             className="w-full object-contain max-h-[70vh] bg-gray-800"

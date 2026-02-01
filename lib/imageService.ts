@@ -35,7 +35,7 @@ export const compressAndUploadImage = async (
   };
 
   const compressedFile = await imageCompression(file, options);
-  
+
   console.log('Compression:', {
     original: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
     compressed: `${(compressedFile.size / 1024).toFixed(2)} KB`,
@@ -46,10 +46,10 @@ export const compressAndUploadImage = async (
     storage,
     `${path}/${uid}/${timestamp}_${baseName}.${extension}`
   );
-  
+
   await uploadBytes(storageRef, compressedFile);
   const downloadURL = await getDownloadURL(storageRef);
-  
+
   return downloadURL;
 };
 
@@ -76,14 +76,14 @@ export const processImageTo4x5 = (
 ): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    
+
     reader.onload = (e) => {
       const img = new Image();
-      
+
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        
+
         if (!ctx) {
           reject(new Error('Could not get canvas context'));
           return;
@@ -91,11 +91,11 @@ export const processImageTo4x5 = (
 
         const targetRatio = 4 / 5; // 0.8
         const imgRatio = img.width / img.height;
-        
+
         let canvasWidth: number, canvasHeight: number;
         let sourceX = 0, sourceY = 0;
         let sourceWidth = img.width, sourceHeight = img.height;
-        
+
         const maxWidth = 1080;
         const maxHeight = 1350;
 
@@ -110,7 +110,7 @@ export const processImageTo4x5 = (
             sourceHeight = img.width / targetRatio;
             sourceY = (img.height - sourceHeight) / 2;
           }
-          
+
           // Set canvas to exact 4:5 ratio
           if (sourceWidth > maxWidth) {
             canvasWidth = maxWidth;
@@ -119,17 +119,17 @@ export const processImageTo4x5 = (
             canvasWidth = sourceWidth;
             canvasHeight = sourceHeight;
           }
-          
+
           canvas.width = canvasWidth;
           canvas.height = canvasHeight;
-          
+
           // Draw cropped image
           ctx.drawImage(
             img,
             sourceX, sourceY, sourceWidth, sourceHeight,
             0, 0, canvasWidth, canvasHeight
           );
-          
+
         } else {
           // FIT MODE: Add black bars to maintain 4:5
           if (imgRatio > targetRatio) {
@@ -141,14 +141,14 @@ export const processImageTo4x5 = (
             canvasHeight = Math.min(img.height, maxHeight);
             canvasWidth = canvasHeight * targetRatio;
           }
-          
+
           canvas.width = canvasWidth;
           canvas.height = canvasHeight;
-          
+
           // Fill with black background
           ctx.fillStyle = '#000000';
           ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-          
+
           // Calculate position to center image
           const scale = Math.min(
             canvasWidth / img.width,
@@ -158,11 +158,11 @@ export const processImageTo4x5 = (
           const scaledHeight = img.height * scale;
           const x = (canvasWidth - scaledWidth) / 2;
           const y = (canvasHeight - scaledHeight) / 2;
-          
+
           // Draw fitted image
           ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
         }
-        
+
         // Convert to blob
         canvas.toBlob(
           (blob) => {
@@ -176,12 +176,65 @@ export const processImageTo4x5 = (
           0.92
         );
       };
-      
+
       img.onerror = () => reject(new Error('Failed to load image'));
       img.src = e.target?.result as string;
     };
-    
+
     reader.onerror = () => reject(new Error('Failed to read file'));
     reader.readAsDataURL(file);
   });
+};
+
+/**
+ * Get optimized image URL (Firebase Storage uses CDN automatically)
+ */
+export const getOptimizedImageUrl = (
+  firebaseUrl: string | string[] | undefined,
+  size?: 'thumb' | 'medium' | 'full'
+): string => {
+  // Handle array of URLs (take first)
+  if (Array.isArray(firebaseUrl)) {
+    firebaseUrl = firebaseUrl[0];
+  }
+
+  // Handle undefined/null
+  if (!firebaseUrl) {
+    return '/default-image.png';
+  }
+
+  // Firebase Storage URLs automatically use Google CDN
+  // No modification needed - CDN is built-in!
+
+  // Future: Add size-based thumbnail URLs when Cloud Function is ready
+  // if (size === 'thumb') return firebaseUrl.replace('.webp', '_thumb_150.webp');
+  // if (size === 'medium') return firebaseUrl.replace('.webp', '_thumb_300.webp');
+
+  return firebaseUrl;
+};
+
+/**
+ * Check if URL is from Firebase Storage (uses CDN)
+ */
+export const isFirebaseStorageUrl = (url: string): boolean => {
+  return url.includes('firebasestorage.googleapis.com');
+};
+
+/**
+ * Preload critical images for faster rendering
+ */
+export const preloadImage = (url: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = reject;
+    img.src = url;
+  });
+};
+
+/**
+ * Batch preload multiple images
+ */
+export const preloadImages = async (urls: string[]): Promise<void> => {
+  await Promise.all(urls.map(url => preloadImage(url)));
 };
