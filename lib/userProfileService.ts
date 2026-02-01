@@ -1,16 +1,3 @@
-/**
- * User Profile Service
- * 
- * Centralized user profile management with in-memory caching.
- * Reduces Firestore reads and improves performance.
- * 
- * Features:
- * - In-memory LRU cache with TTL
- * - Batch fetching for efficiency
- * - Cache invalidation on updates
- * - Type-safe operations
- */
-
 import { doc, getDoc, getDocs, query, collection, where, documentId } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -43,7 +30,9 @@ class UserProfileCache {
         // LRU: Remove oldest if at capacity
         if (this.cache.size >= this.MAX_SIZE) {
             const oldestKey = this.cache.keys().next().value;
-            this.cache.delete(oldestKey);
+            if (oldestKey) {
+                this.cache.delete(oldestKey);
+            }
         }
 
         this.cache.set(uid, {

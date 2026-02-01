@@ -5,7 +5,7 @@
  * Handles calculation, updates, and batch operations.
  */
 
-import { doc, updateDoc, runTransaction, writeBatch, getDocs, collection, query, limit } from 'firebase/firestore';
+import { doc, updateDoc, runTransaction, writeBatch, getDocs, collection, query, limit, getDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
 /**
@@ -136,7 +136,7 @@ export const batchRecalculateScores = async (
             for (const postId of batchIds) {
                 try {
                     const postRef = doc(db, 'posts', postId);
-                    const postDoc = await postRef.get();
+                    const postDoc = await getDoc(postRef);
 
                     if (postDoc.exists()) {
                         const data = postDoc.data();
