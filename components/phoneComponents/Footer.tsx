@@ -95,7 +95,7 @@ const Footer = () => {
 
           {/* Home Link */}
           <Link href={'/feed'}>
-            <div className={`flex flex-col items-center ${getActiveClass('/feed')}`}>
+            <div className={`flex flex-col items-center active:scale-95 transition-transform ${getActiveClass('/feed')}`}>
               <FaHouse size={24} />
               <span className="text-xs">Home</span>
             </div>
@@ -103,7 +103,7 @@ const Footer = () => {
 
           {/* Explore Link */}
           <Link href={'/explore'}>
-            <div className={`flex flex-col items-center ${getActiveClass('/explore')}`}>
+            <div className={`flex flex-col items-center active:scale-95 transition-transform ${getActiveClass('/explore')}`}>
               {/* <Search size={24} /> */}
               <MdExplore size={24} />
 
@@ -114,13 +114,13 @@ const Footer = () => {
           {/* Post/Create Modal Button (Always White) */}
           <div
             onClick={() => setShowCreateModal(true)}
-            className="flex flex-col items-center text-white" // Keep this button white as it's not a route
+            className="flex flex-col items-center text-white active:scale-95 transition-transform cursor-pointer" // Keep this button white as it's not a route
           >
             <Plus size={25} className="" />
             <span className="text-xs ">Post</span>
           </div>
 
-          <Link href={'/quest'}><div className="flex flex-col items-center text-white">
+          <Link href={'/quest'}><div className="flex flex-col items-center text-white active:scale-95 transition-transform">
             {/* <Quest size={22} className="" /> */}
             <img
               src="/oq_logo.svg"
@@ -133,7 +133,7 @@ const Footer = () => {
 
           {/* Account Link */}
           <Link href={'/account'}>
-            <div className={`flex flex-col items-center ${getActiveClass('/account')}`}>
+            <div className={`flex flex-col items-center active:scale-95 transition-transform ${getActiveClass('/account')}`}>
               <HiUser size={22} className="" />
               <span className="text-xs">Account</span>
             </div>
