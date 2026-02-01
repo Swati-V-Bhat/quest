@@ -123,8 +123,14 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose, isSignIn = f
 
             if (isSignInMode) {
                 await signInWithEmail(email, password);
-                onClose();
-                router.push('/feed');
+                // Check if user has already completed onboarding
+                const userData = await getCurrentUserData() as any;
+                if (userData?.onboardingCompleted) {
+                    onClose();
+                    router.push('/feed');
+                } else {
+                    setCurrentStep(2);
+                }
             } else {
                 // Send verification code before creating account
                 await sendEmailVerificationCode(email);
@@ -209,9 +215,18 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose, isSignIn = f
         try {
             setIsLoading(true);
 
+            const { updateOnboardingProfile } = await import('@/lib/authService');
+
             if (!skip) {
-                const { updateOnboardingProfile } = await import('@/lib/authService');
+                // Save all onboarding data
                 await updateOnboardingProfile(onboardingData);
+            } else {
+                // Even when skipping, mark onboarding as complete
+                await updateOnboardingProfile({
+                    travelerType: null,
+                    destinationInterests: [],
+                    travelBio: ''
+                });
             }
 
             onClose();
