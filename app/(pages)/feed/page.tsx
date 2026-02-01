@@ -493,23 +493,36 @@ const Feed = () => {
           email: currentUser.email ?? undefined,
           photoURL: currentUser.photoURL ?? undefined
         });
+        setLoading(false); // Show UI immediately after auth
+
+        // Start loading posts immediately (parallel with user data)
+        loadInitialPosts();
 
         try {
-          const userDetails = await getCurrentUserData();
-          setUserData(userDetails);
+          // Fetch user data and following list in parallel
+          const [userDetails, following] = await Promise.all([
+            getCurrentUserData(),
+            getFollowingList(currentUser.uid)
+          ]);
 
-          // 🔥 ADD THESE 2 LINES
-          const following = await getFollowingList(currentUser.uid);
+          setUserData(userDetails);
           setFollowingList(following);
+
+          // Update saved status once we have userData
+          if ((userDetails as any)?.savedPosts) {
+            setPosts(prev => prev.map(post => ({
+              ...post,
+              isSaved: (userDetails as any).savedPosts.includes(post.id) || false
+            })));
+          }
         } catch (error) {
           console.error("Error fetching user data:", error);
         }
       } else {
         setUser(null);
         setUserData(null);
+        setLoading(false);
       }
-
-      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -552,14 +565,17 @@ const Feed = () => {
   };
 
   // Move loadInitialPosts to component scope so it can be called from callbacks
-  const loadInitialPosts = async () => {
-    if (!userData) return;
-
+  const loadInitialPosts = async (savedPosts?: string[]) => {
     try {
       setInitialLoading(true);
       const result = await getPaginatedPosts(null, 5);
 
-      const postsWithSavedStatus = withSavedStatus(result.posts);
+      // Use passed savedPosts or current userData
+      const saved = savedPosts || userData?.savedPosts || [];
+      const postsWithSavedStatus = result.posts.map((post: any) => ({
+        ...post,
+        isSaved: saved.includes(post.id) || false,
+      }));
 
       setPosts(postsWithSavedStatus);
       setLastVisible(result.lastVisible);
@@ -570,10 +586,6 @@ const Feed = () => {
       setInitialLoading(false);
     }
   };
-
-  useEffect(() => {
-    loadInitialPosts();
-  }, [userData]);
 
   const loadMorePosts = async () => {
     if (!hasMore || loadingMore || !lastVisible) return;
@@ -1625,54 +1637,59 @@ const MobileFeedPage = () => {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (authUser) => {
       if (authUser) {
-        try {
-          const userData = await getCurrentUserData();
-          setUser(userData);
-          setUserData(userData);
+        const basicUser = {
+          uid: authUser.uid,
+          displayName: authUser.displayName ?? 'Anonymous',
+          email: authUser.email ?? 'Anonymous',
+          photoURL: authUser.photoURL ?? '',
+        };
+        setUser(basicUser);
 
-          // Load following list
-          const following = await getFollowingList(authUser.uid);
+        // Start loading posts immediately (parallel with user data)
+        try {
+          const result = await getPaginatedPosts(null, 5);
+          const postsData = result.posts.map(formatPostForMobile);
+          setPosts(postsData);
+          setLastVisible(result.lastVisible);
+          setHasMore(result.hasMore);
+        } catch (error) {
+          console.error('Error loading initial posts:', error);
+        } finally {
+          setLoading(false);
+        }
+
+        try {
+          // Fetch user data and following list in parallel
+          const [userDetails, following] = await Promise.all([
+            getCurrentUserData(),
+            getFollowingList(authUser.uid)
+          ]);
+
+          if (userDetails) {
+            setUser(userDetails);
+            setUserData(userDetails);
+          }
           setFollowingList(following);
 
+          // Update saved status once we have userData
+          if ((userDetails as any)?.savedPosts) {
+            setPosts(prev => prev.map(post => ({
+              ...post,
+              isSaved: (userDetails as any).savedPosts.includes(post.id) || false
+            })));
+          }
         } catch (error) {
           console.error('Error getting user data:', error);
-          setUser({
-            uid: authUser.uid,
-            displayName: authUser.displayName ?? 'Anonymous',
-            email: authUser.email ?? 'Anonymous',
-            photoURL: authUser.photoURL ?? '',
-          });
         }
       } else {
         setUser(null);
         setUserData(null);
+        setLoading(false);
       }
     });
 
     return () => unsubscribeAuth();
   }, []);
-
-  useEffect(() => {
-    const loadInitialPosts = async () => {
-      if (!user) return;
-
-      try {
-        setLoading(true);
-        const result = await getPaginatedPosts(null, 5);
-        const postsData = result.posts.map(formatPostForMobile);
-
-        setPosts(postsData);
-        setLastVisible(result.lastVisible);
-        setHasMore(result.hasMore);
-      } catch (error) {
-        console.error('Error loading initial posts:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadInitialPosts();
-  }, [user, userData]);
 
   const loadMorePosts = async () => {
     if (!hasMore || loadingMore || !lastVisible || !user) return;
