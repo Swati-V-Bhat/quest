@@ -8,7 +8,12 @@ import { auth, db, storage } from '@/lib/firebase';
 import questService from '@/lib/questService';
 import { createPost } from '@/lib/postService';
 import { Map, Calendar, ArrowLeft, Clock, MapPin as MapPinIcon, Filter, Edit3, Save, Copy, Plus, Trash2, GripVertical, ChevronDown, ChevronUp, Share2, Send, X, Plane, Train, Bus, Car, Ship, Edit2 } from 'lucide-react';
-import InteractiveMap from '../../../../components/quest/InteractiveMap';
+import dynamic from 'next/dynamic';
+// Lazy load map component since it's heavy and not immediately visible
+const InteractiveMap = dynamic(() => import('../../../../components/quest/InteractiveMap'), {
+  loading: () => <div className="w-full h-[400px] bg-gray-900 animate-pulse rounded-xl" />,
+  ssr: false // Map libraries often depend on window/document
+});
 import { useToast, ToastContainer } from '@/hooks/use-toast';
 import { PostQuestModal } from '@/components/QuestPopups';
 import { LocationInput } from '@/components/common/LocationInput';
@@ -709,55 +714,59 @@ const QuestViewPage = () => {
   if (!displayQuest) return null;
 
   // Fix: Properly extract activities with coordinates and add date (supports both lat/lng and latitude/longitude formats)
-  const allActivitiesWithCoords = displayQuest.itinerary?.days?.flatMap((day: any) =>
-    (day.activities || [])
-      .filter((a: any) => {
-        const coords = a.location?.coordinates;
-        return coords && (coords.lat || coords.latitude) && (coords.lng || coords.longitude || coords.lon);
-      })
-      .map((a: any) => {
-        const lat = a.location.coordinates.lat || a.location.coordinates.latitude;
-        const lng = a.location.coordinates.lng || a.location.coordinates.longitude || a.location.coordinates.lon;
-        return {
-          ...a,
-          date: day.date,
-          location: {
-            ...a.location,
-            coordinates: {
-              lat,
-              lng,
-              latitude: lat,
-              longitude: lng
+  const allActivitiesWithCoords = React.useMemo(() => {
+    return displayQuest.itinerary?.days?.flatMap((day: any) =>
+      (day.activities || [])
+        .filter((a: any) => {
+          const coords = a.location?.coordinates;
+          return coords && (coords.lat || coords.latitude) && (coords.lng || coords.longitude || coords.lon);
+        })
+        .map((a: any) => {
+          const lat = a.location.coordinates.lat || a.location.coordinates.latitude;
+          const lng = a.location.coordinates.lng || a.location.coordinates.longitude || a.location.coordinates.lon;
+          return {
+            ...a,
+            date: day.date,
+            location: {
+              ...a.location,
+              coordinates: {
+                lat,
+                lng,
+                latitude: lat,
+                longitude: lng
+              }
             }
-          }
-        };
-      })
-  ) || [];
+          };
+        })
+    ) || [];
+  }, [displayQuest]);
 
-  const dayActivitiesWithCoords = mapFilter !== 'all' && displayQuest.itinerary?.days?.[mapFilter]
-    ? (displayQuest.itinerary.days[mapFilter].activities || [])
-      .filter((a: any) => {
-        const coords = a.location?.coordinates;
-        return coords && (coords.lat || coords.latitude) && (coords.lng || coords.longitude || coords.lon);
-      })
-      .map((a: any) => {
-        const lat = a.location.coordinates.lat || a.location.coordinates.latitude;
-        const lng = a.location.coordinates.lng || a.location.coordinates.longitude || a.location.coordinates.lon;
-        return {
-          ...a,
-          date: displayQuest.itinerary.days[mapFilter].date,
-          location: {
-            ...a.location,
-            coordinates: {
-              lat,
-              lng,
-              latitude: lat,
-              longitude: lng
+  const dayActivitiesWithCoords = React.useMemo(() => {
+    return mapFilter !== 'all' && displayQuest.itinerary?.days?.[mapFilter]
+      ? (displayQuest.itinerary.days[mapFilter].activities || [])
+        .filter((a: any) => {
+          const coords = a.location?.coordinates;
+          return coords && (coords.lat || coords.latitude) && (coords.lng || coords.longitude || coords.lon);
+        })
+        .map((a: any) => {
+          const lat = a.location.coordinates.lat || a.location.coordinates.latitude;
+          const lng = a.location.coordinates.lng || a.location.coordinates.longitude || a.location.coordinates.lon;
+          return {
+            ...a,
+            date: displayQuest.itinerary.days[mapFilter].date,
+            location: {
+              ...a.location,
+              coordinates: {
+                lat,
+                lng,
+                latitude: lat,
+                longitude: lng
+              }
             }
-          }
-        };
-      })
-    : [];
+          };
+        })
+      : [];
+  }, [displayQuest, mapFilter]);
 
 
 

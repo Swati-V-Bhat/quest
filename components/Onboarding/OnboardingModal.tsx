@@ -611,9 +611,12 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose, isSignIn = f
 
                 {/* Right Form Section */}
                 <div className="w-full md:w-3/5 p-6 flex flex-col overflow-y-auto">
-                    {/* Header */}
+                    {/* Header - Hide step indicator on sign-in mode */}
                     <div className="flex justify-between items-start mb-4">
-                        <div className="text-sm text-gray-500">Step {currentStep} of 3</div>
+                        {(!isSignInMode || currentStep > 1) && (
+                            <div className="text-sm text-gray-500">Step {currentStep} of 3</div>
+                        )}
+                        {isSignInMode && currentStep === 1 && <div />} {/* Spacer for alignment */}
                         <button
                             onClick={onClose}
                             className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors -mt-1 -mr-1"
@@ -622,7 +625,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose, isSignIn = f
                         </button>
                     </div>
 
-                    {renderStepIndicator()}
+                    {(!isSignInMode || currentStep > 1) && renderStepIndicator()}
 
                     {error && (
                         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
