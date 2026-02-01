@@ -702,20 +702,12 @@ const QuestViewPage = () => {
     setDraggedItem(null);
   };
 
-  if (loading || questLoading) {
-    return <div className="min-h-screen bg-black text-white flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div></div>;
-  }
-
-  if (!quest) {
-    return <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center text-center p-4"><h2 className="text-xl font-bold mb-2">Quest Not Found</h2><p className="text-gray-400">The quest you're looking for doesn't exist.</p><button onClick={() => router.back()} className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg">Go Back</button></div>;
-  }
-
+  // Fix: Define displayQuest and useMemo hooks BEFORE any conditional returns to satisfy React Hook rules
   const displayQuest = isEditMode ? editedQuest : quest;
-  if (!displayQuest) return null;
 
   // Fix: Properly extract activities with coordinates and add date (supports both lat/lng and latitude/longitude formats)
   const allActivitiesWithCoords = React.useMemo(() => {
-    return displayQuest.itinerary?.days?.flatMap((day: any) =>
+    return displayQuest?.itinerary?.days?.flatMap((day: any) =>
       (day.activities || [])
         .filter((a: any) => {
           const coords = a.location?.coordinates;
@@ -742,7 +734,7 @@ const QuestViewPage = () => {
   }, [displayQuest]);
 
   const dayActivitiesWithCoords = React.useMemo(() => {
-    return mapFilter !== 'all' && displayQuest.itinerary?.days?.[mapFilter]
+    return mapFilter !== 'all' && displayQuest?.itinerary?.days?.[mapFilter]
       ? (displayQuest.itinerary.days[mapFilter].activities || [])
         .filter((a: any) => {
           const coords = a.location?.coordinates;
@@ -767,6 +759,16 @@ const QuestViewPage = () => {
         })
       : [];
   }, [displayQuest, mapFilter]);
+
+  if (loading || questLoading) {
+    return <div className="min-h-screen bg-black text-white flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div></div>;
+  }
+
+  if (!quest) {
+    return <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center text-center p-4"><h2 className="text-xl font-bold mb-2">Quest Not Found</h2><p className="text-gray-400">The quest you're looking for doesn't exist.</p><button onClick={() => router.back()} className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg">Go Back</button></div>;
+  }
+
+  if (!displayQuest) return null;
 
 
 
