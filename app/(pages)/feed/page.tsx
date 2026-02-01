@@ -34,6 +34,8 @@ import CommentModal from '@/components/Home/CommentModal';
 import EditPostModal from '@/components/Home/EditPostModal';
 import MobilePostMenu from '@/components/Home/PostMenu';
 import { getLevelInfo, getUserBadges } from '@/lib/firebaseSerive';
+import CommentSection from '@/components/feed/CommentSection';
+
 
 // Helper function to generate username from display name
 const generateUsername = (displayName: string | null | undefined): string => {
@@ -418,189 +420,6 @@ const ShareModal = ({ post, onClose }: any) => {
   );
 };
 
-// Inline Comments Component
-const InlineComments = ({ post, user, onCommentSubmit, isOpen, onToggle }: any) => {
-  const [commentText, setCommentText] = useState('');
-  const [comments, setComments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [internalShowComments, setInternalShowComments] = useState(false);
-  const router = useRouter();
-
-  const showComments = isOpen !== undefined ? isOpen : internalShowComments;
-
-  const handleToggle = () => {
-    if (onToggle) {
-      onToggle();
-    } else {
-      setInternalShowComments(!internalShowComments);
-    }
-  };
-
-  useEffect(() => {
-    if (showComments) {
-      loadComments();
-    }
-  }, [showComments]);
-
-  const loadComments = async () => {
-    if (!post?.id) return;
-
-    setLoading(true);
-    try {
-      const commentsRef = collection(db, 'posts', post.id, 'comments');
-      const commentsQuery = query(commentsRef, orderBy('createdAt', 'desc'));
-      const commentsSnapshot = await getDocs(commentsQuery);
-
-      const commentsData: any[] = [];
-      for (const commentDoc of commentsSnapshot.docs) {
-        const commentData = commentDoc.data();
-        let commentAuthor = {
-          name: 'Anonymous',
-          avatar: '/default-avatar.png',
-          uid: commentData.uid
-        };
-
-        if (commentData.uid) {
-          try {
-            const userDoc = await getDoc(doc(db, 'users', commentData.uid));
-            if (userDoc.exists()) {
-              const userData = userDoc.data();
-              commentAuthor = {
-                name: userData.displayName || 'Anonymous',
-                avatar: userData.photoURL || '/default-avatar.png',
-                uid: commentData.uid
-              };
-            }
-          } catch (error) {
-            console.error('Error fetching comment author:', error);
-          }
-        }
-
-        commentsData.push({
-          id: commentDoc.id,
-          text: commentData.text || '',
-          createdAt: commentData.createdAt,
-          author: commentAuthor,
-          ...commentData
-        });
-      }
-
-      setComments(commentsData);
-    } catch (error) {
-      console.error('Error fetching comments:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentText.trim() || !user) return;
-
-    try {
-      await onCommentSubmit(post.id, commentText);
-      setCommentText('');
-      loadComments();
-    } catch (error) {
-      console.error('Error submitting comment:', error);
-    }
-  };
-
-  const formatCommentTime = (timestamp: any) => {
-    if (!timestamp) return '';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp.seconds * 1000);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-
-  return (
-    <div className="mt-3 border-t border-gray-700 pt-3">
-      <button
-        onClick={handleToggle}
-        className="text-gray-400 hover:text-[#F7CEB0] text-sm font-medium mb-3 transition-colors"
-      >
-        {showComments ? 'Hide' : 'View'} Comments ({post.stats?.comments || 0})
-      </button>
-
-
-      {
-        showComments && (
-          <div className="space-y-3">
-            <form onSubmit={handleSubmit} className="flex items-start gap-3">
-              <img
-                src={user?.photoURL || '/default-avatar.png'}
-                alt="Your profile"
-                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-              />
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="w-full bg-gray-800 text-white px-3 py-2 pr-12 rounded-lg border border-gray-600 focus:ring-2 focus:ring-[#F7CEB0] focus:border-transparent focus:outline-none text-sm"
-                  required
-                />
-                <button
-                  type="submit"
-                  disabled={!commentText.trim()}
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 transition-colors ${commentText.trim()
-                    ? 'text-[#F7CEB0] hover:text-[#f5c094]'
-                    : 'text-gray-600 cursor-not-allowed'
-                    }`}
-                >
-                  <Send size={16} />
-                </button>
-              </div>
-            </form>
-
-            {loading ? (
-              <div className="text-center py-4">
-                <div className="text-gray-400 text-sm">Loading comments...</div>
-              </div>
-            ) : comments.length === 0 ? (
-              <div className="text-center py-4">
-                <p className="text-gray-400 text-sm">No comments yet</p>
-              </div>
-            ) : (
-              <div className="space-y-3 max-h-60 overflow-y-auto">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="flex items-start gap-2">
-                    <img
-                      src={comment.author.avatar}
-                      alt={comment.author.name}
-                      className="w-6 h-6 rounded-full object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => router.push(`/profile/${comment.author.uid}`)}
-                    />
-                    <div className="flex-1">
-                      <div className="bg-gray-800 rounded-lg p-2">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="text-xs font-medium text-white cursor-pointer hover:underline" onClick={() => router.push(`/profile/${comment.author.uid}`)}>
-                            {comment.author.name}
-                          </h4>
-                          <span className="text-gray-400 text-xs">·</span>
-                          <span className="text-gray-400 text-xs">
-                            {formatCommentTime(comment.createdAt)}
-                          </span>
-                        </div>
-                        <p className="text-white text-sm">{comment.text}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )
-      }
-    </div >
-  );
-};
 
 // DESKTOP FEED COMPONENT
 const Feed = () => {
@@ -825,11 +644,37 @@ const Feed = () => {
           likedBy: arrayRemove(user.uid),
           likeCount: increment(-1)
         });
+
+        // Recalculate engagement score
+        const updatedPost = await getDoc(postRef);
+        if (updatedPost.exists()) {
+          const data = updatedPost.data();
+          const { calculateEngagementScore } = await import('@/lib/postService');
+          const newScore = calculateEngagementScore(
+            data.likeCount || 0,
+            data.commentCount || 0,
+            data.shareCount || 0
+          );
+          await updateDoc(postRef, { engagementScore: newScore });
+        }
       } else {
         await updateDoc(postRef, {
           likedBy: arrayUnion(user.uid),
           likeCount: increment(1)
         });
+
+        // Recalculate engagement score
+        const updatedPost = await getDoc(postRef);
+        if (updatedPost.exists()) {
+          const data = updatedPost.data();
+          const { calculateEngagementScore } = await import('@/lib/postService');
+          const newScore = calculateEngagementScore(
+            data.likeCount || 0,
+            data.commentCount || 0,
+            data.shareCount || 0
+          );
+          await updateDoc(postRef, { engagementScore: newScore });
+        }
       }
     } catch (error) {
       console.error('Error toggling like:', error);
@@ -1090,12 +935,11 @@ const Feed = () => {
             onFollow={handleFollow}
           />
           <div className="px-4 pb-4">
-            <InlineComments
-              post={post}
-              user={user}
-              onCommentSubmit={handleCommentSubmit}
-              isOpen={showQuestComments}
-              onToggle={() => setShowQuestComments(!showQuestComments)}
+            <CommentSection
+              postId={post.id}
+              currentUser={user}
+              initialCommentCount={post.stats?.comments || 0}
+              onCommentAdded={() => loadInitialPosts()}
             />
           </div>
         </div>
@@ -1240,10 +1084,11 @@ const Feed = () => {
           </div>
         </div>
 
-        <InlineComments
-          post={post}
-          user={user}
-          onCommentSubmit={handleCommentSubmit}
+        <CommentSection
+          postId={post.id}
+          currentUser={user}
+          initialCommentCount={post.stats?.comments || 0}
+          onCommentAdded={() => loadInitialPosts()}
         />
       </article>
     );
@@ -1480,10 +1325,6 @@ const MobilePostCard = ({
   followingList,
   onFollow
 }: any) => {
-  const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState('');
-  const [comments, setComments] = useState<any[]>([]);
-  const [loadingComments, setLoadingComments] = useState(false);
   const router = useRouter();
 
   const isLiked = post.likedBy?.includes(currentUser.uid);
@@ -1507,72 +1348,7 @@ const MobilePostCard = ({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const loadComments = async () => {
-    if (!post?.id) return;
 
-    setLoadingComments(true);
-    try {
-      const commentsRef = collection(db, 'posts', post.id, 'comments');
-      const commentsQuery = query(commentsRef, orderBy('createdAt', 'desc'));
-      const commentsSnapshot = await getDocs(commentsQuery);
-
-      const commentsData: any[] = [];
-      for (const commentDoc of commentsSnapshot.docs) {
-        const commentData = commentDoc.data();
-        let commentAuthor = {
-          name: 'Anonymous',
-          avatar: '/default-avatar.png',
-          uid: commentData.uid
-        };
-
-        if (commentData.uid) {
-          try {
-            const userDoc = await getDoc(doc(db, 'users', commentData.uid));
-            if (userDoc.exists()) {
-              const userData = userDoc.data();
-              commentAuthor = {
-                name: userData.displayName || 'Anonymous',
-                avatar: userData.photoURL || '/default-avatar.png',
-                uid: commentData.uid
-              };
-            }
-          } catch (error) {
-            console.error('Error fetching comment author:', error);
-          }
-        }
-
-        commentsData.push({
-          id: commentDoc.id,
-          text: commentData.text || '',
-          createdAt: commentData.createdAt,
-          author: commentAuthor,
-          ...commentData
-        });
-      }
-
-      setComments(commentsData);
-    } catch (error) {
-      console.error('Error fetching comments:', error);
-    } finally {
-      setLoadingComments(false);
-    }
-  };
-
-  const handleToggleComments = () => {
-    if (!showComments) {
-      loadComments();
-    }
-    setShowComments(!showComments);
-  };
-
-  const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentText.trim()) return;
-
-    await onComment(commentText);
-    setCommentText('');
-    loadComments();
-  };
 
   if (post.postType === 'quest_completion' || post.questContext) {
     return (
@@ -1594,79 +1370,21 @@ const MobilePostCard = ({
           }}
           currentUser={currentUser}
           onLike={onLike}
-          onComment={handleToggleComments}
+          onComment={onComment}
           onShare={onShare}
           onSave={onSave}
           onMenu={onMenuClick}
           isSaved={post.isSaved}
         />
 
-        {showComments && (
-          <div className="mt-4 pt-4 border-t border-gray-800 p-4">
-            <form onSubmit={handleSubmitComment} className="mb-4">
-              <div className="flex items-start gap-2">
-                <img
-                  src={currentUser.photoURL || '/default-avatar.png'}
-                  alt="Your profile"
-                  className="w-8 h-8 rounded-full object-cover shrink-0"
-                />
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    placeholder="Add a comment..."
-                    className="w-full bg-gray-900 text-white px-3 py-2 pr-10 rounded-lg border border-gray-700 focus:ring-2 focus:ring-[#F7CEB0] focus:border-transparent focus:outline-none text-sm"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!commentText.trim()}
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 transition-colors ${commentText.trim()
-                      ? 'text-[#F7CEB0]'
-                      : 'text-gray-600'
-                      }`}
-                  >
-                    <Send size={16} />
-                  </button>
-                </div>
-              </div>
-            </form>
 
-            {loadingComments ? (
-              <div className="text-center py-4">
-                <div className="text-gray-400 text-sm">Loading comments...</div>
-              </div>
-            ) : comments.length === 0 ? (
-              <div className="text-center py-4">
-                <p className="text-gray-400 text-sm">No comments yet</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="flex items-start gap-2">
-                    <img
-                      src={comment.author.avatar}
-                      alt={comment.author.name}
-                      className="w-7 h-7 rounded-full object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => router.push(`/profile/${comment.author.uid}`)}
-                    />
-                    <div className="flex-1">
-                      <div className="bg-gray-900 rounded-lg p-2">
-                        <h4 className="text-xs font-medium text-white mb-1 cursor-pointer hover:underline" onClick={() => router.push(`/profile/${comment.author.uid}`)}>
-                          {comment.author.name}
-                        </h4>
-                        <p className="text-xs text-gray-300">{comment.text}</p>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1 ml-2">
-                        {formatTime(comment.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <div className="p-4">
+          <CommentSection
+            postId={post.id}
+            currentUser={currentUser}
+            initialCommentCount={post.commentCount || 0}
+          />
+        </div>
       </>
     );
   }
@@ -1781,7 +1499,7 @@ const MobilePostCard = ({
         </button>
 
         <button
-          onClick={handleToggleComments}
+          onClick={onComment}
           className="flex items-center gap-1 text-gray-400 hover:text-[#F7CEB0] transition-colors"
         >
           <FaRegCommentDots className="w-5 h-5" />
@@ -1805,72 +1523,11 @@ const MobilePostCard = ({
         </button>
       </div>
 
-      {showComments && (
-        <div className="mt-4 pt-4 border-t border-gray-800">
-          <form onSubmit={handleSubmitComment} className="mb-4">
-            <div className="flex items-start gap-2">
-              <img
-                src={currentUser.photoURL || '/default-avatar.png'}
-                alt="Your profile"
-                className="w-8 h-8 rounded-full object-cover shrink-0"
-              />
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="w-full bg-gray-900 text-white px-3 py-2 pr-10 rounded-lg border border-gray-700 focus:ring-2 focus:ring-[#F7CEB0] focus:border-transparent focus:outline-none text-sm"
-                />
-                <button
-                  type="submit"
-                  disabled={!commentText.trim()}
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 transition-colors ${commentText.trim()
-                    ? 'text-[#F7CEB0]'
-                    : 'text-gray-600'
-                    }`}
-                >
-                  <Send size={16} />
-                </button>
-              </div>
-            </div>
-          </form>
-
-          {loadingComments ? (
-            <div className="text-center py-4">
-              <div className="text-gray-400 text-sm">Loading comments...</div>
-            </div>
-          ) : comments.length === 0 ? (
-            <div className="text-center py-4">
-              <p className="text-gray-400 text-sm">No comments yet</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {comments.map((comment) => (
-                <div key={comment.id} className="flex items-start gap-2">
-                  <img
-                    src={comment.author.avatar}
-                    alt={comment.author.name}
-                    className="w-7 h-7 rounded-full object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => router.push(`/profile/${comment.author.uid}`)}
-                  />
-                  <div className="flex-1">
-                    <div className="bg-gray-900 rounded-lg p-2">
-                      <h4 className="text-xs font-medium text-white mb-1 cursor-pointer hover:underline" onClick={() => router.push(`/profile/${comment.author.uid}`)}>
-                        {comment.author.name}
-                      </h4>
-                      <p className="text-xs text-gray-300">{comment.text}</p>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1 ml-2">
-                      {formatTime(comment.createdAt)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <CommentSection
+        postId={post.id}
+        currentUser={currentUser}
+        initialCommentCount={post.commentCount || 0}
+      />
     </article>
   );
 };

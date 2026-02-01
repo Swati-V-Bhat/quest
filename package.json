@@ -92,8 +92,7 @@
     "remotion": "^4.0.370",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
-    "unsplash-js": "^7.0.20",
-    "uuid": "^11.1.0"
+    "unsplash-js": "^7.0.20"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.12",
@@ -103,6 +102,7 @@
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
     "autoprefixer": "^10.4.21",
+    "baseline-browser-mapping": "^2.9.19",
     "eslint": "^8.57.0",
     "eslint-config-next": "15.4.5",
     "globals": "^15.15.0",
