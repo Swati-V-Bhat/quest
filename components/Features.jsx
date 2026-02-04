@@ -27,7 +27,7 @@ const Features = () => {
     return (
         <>
             {/* Desktop/Laptop Layout */}
-            <div className="relative bg-cover bg-center h-auto flex flex-col items-center pt-10 ">
+            <div id='introducing-quests' className="relative bg-cover bg-center h-auto flex flex-col items-center pt-10 ">
                 <div className="absolute inset-0 bg-[url('/bgc.svg')] bg-cover bg-center opacity-50 z-9"></div>
 
                 {/* Heading */}

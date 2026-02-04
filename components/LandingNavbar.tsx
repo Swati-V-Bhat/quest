@@ -48,7 +48,7 @@ const LandingNavbar = () => {
                 </div>
             </nav>
 
-            {showAuthModal && <OnboardingModal onClose={() => setShowAuthModal(false)} />}
+            {showAuthModal && <OnboardingModal onClose={() => setShowAuthModal(false)} isSignIn={true} />}
         </>
     );
 };

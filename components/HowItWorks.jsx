@@ -3,7 +3,7 @@ import React from 'react'
 const HowItWorks = () => {
   return (
     <>
-      <div className='bg-[#FFFFFF]/10 py-20 pb-24 px-4'>
+      <div id='how-it-works' className='bg-[#FFFFFF]/10 py-20 pb-24 px-4'>
         <div className='text-5xl pb-10 text-center font-arsenal italic'>
           How it <span className='text-[#EA6100] font-[700 ]'>works ?</span>
         </div>
@@ -22,7 +22,7 @@ const HowItWorks = () => {
             <img className='p-4 w-20' src="/suitcase.png" alt="" />
             <div className='pl-4 text-xl font-[650]'>3. Finish Quests and Flaunt Badges</div>
             <div className='pl-4 pb-4'>Travel’s more fun when there’s a score to beat.
-</div>
+            </div>
           </div>
         </div>
       </div>

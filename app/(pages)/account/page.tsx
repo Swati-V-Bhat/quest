@@ -129,6 +129,7 @@ const AccountPage = () => {
   const [loadingQuests, setLoadingQuests] = useState(false);
   const [followingList, setFollowingList] = useState<string[]>([]);
 
+  // Effect 1: Load critical profile data first (shows page immediately)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -136,36 +137,70 @@ const AccountPage = () => {
 
       if (currentUser) {
         try {
-          const data = await getUserData(currentUser.uid);
+          // Load only essential profile data to show the page quickly
+          const [data, following] = await Promise.all([
+            getUserData(currentUser.uid),
+            getFollowingList(currentUser.uid)
+          ]);
+
           setUserData(data as UserData);
-
-          const following = await getFollowingList(currentUser.uid);
           setFollowingList(following);
-
-          const userBadges = await getUserBadges(currentUser.uid);
-          setBadges(userBadges.slice(0, 3));
-
-          // Updated gamification logic
-          const gData = await getUserGamificationData(currentUser.uid);
-          const rankInfo = calculateRankInfo(gData);
-          setGamificationInfo(rankInfo);
-
-          await fetchUserPosts(currentUser.uid);
-
-          if (data?.savedPosts && data.savedPosts.length > 0) {
-            await fetchSavedPosts(data.savedPosts);
-          }
-
-          await fetchUserQuests(currentUser.uid);
         } catch (error) {
           console.error('Error fetching user data:', error);
         }
       }
-      setLoading(false);
+      setLoading(false); // ✅ Show page immediately after profile loads
     });
 
     return () => unsubscribe();
   }, []);
+
+  // Effect 2: Load badges & gamification data after initial render (non-blocking)
+  useEffect(() => {
+    if (!user) return;
+
+    async function loadSecondaryData() {
+      try {
+        const [userBadges, gData] = await Promise.all([
+          getUserBadges(user.uid),
+          getUserGamificationData(user.uid)
+        ]);
+
+        setBadges(userBadges.slice(0, 3));
+        const rankInfo = calculateRankInfo(gData);
+        setGamificationInfo(rankInfo);
+      } catch (error) {
+        console.error('Error fetching badges/gamification:', error);
+      }
+    }
+
+    loadSecondaryData();
+  }, [user]);
+
+  // Effect 3: Load posts & quests in parallel with deferred execution
+  useEffect(() => {
+    if (!user || !userData) return;
+
+    // Small delay to prioritize profile render
+    const timer = setTimeout(() => {
+      // Load posts and quests in parallel (not blocking each other)
+      const loadPosts = async () => {
+        await fetchUserPosts(user.uid);
+        if (userData.savedPosts && userData.savedPosts.length > 0) {
+          await fetchSavedPosts(userData.savedPosts);
+        }
+      };
+
+      const loadQuests = async () => {
+        await fetchUserQuests(user.uid);
+      };
+
+      // Execute both in parallel
+      Promise.all([loadPosts(), loadQuests()]);
+    }, 100); // 100ms delay to let profile render first
+
+    return () => clearTimeout(timer);
+  }, [user, userData]);
 
   const fetchUserPosts = async (uid: string) => {
     setLoadingPosts(true);
@@ -409,22 +444,33 @@ const AccountPage = () => {
                 className='w-full h-full object-cover'
               />
               <div className='absolute inset-0 bg-gradient-to-b from-transparent to-[#121212]'></div>
+
+              {/* Settings Icon - Top Right (Mobile & Desktop) */}
+              <button
+                onClick={() => navigateTo('/settings')}
+                className='absolute top-4 right-4 lg:top-6 lg:right-6 w-10 h-10 bg-black/50 backdrop-blur-sm hover:bg-black/70 rounded-full flex items-center justify-center transition-colors border border-white/10'
+                title='Settings'
+              >
+                <Settings size={20} className='text-white' />
+              </button>
             </div>
 
             {/* Profile Info */}
             <div className='relative px-5 lg:px-8 -mt-16 lg:-mt-20'>
-              <div className='flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4'>
-                <div className='flex flex-col lg:flex-row items-center lg:items-end gap-4 lg:gap-6'>
-                  <div className='relative'>
+              {/* Mobile: Horizontal Layout | Desktop: Flex Row */}
+              <div className='flex items-center lg:items-end justify-between gap-3 lg:gap-4'>
+                {/* Left: Profile Picture + Info */}
+                <div className='flex items-center lg:items-end gap-3 lg:gap-6 flex-1 min-w-0'>
+                  <div className='relative flex-shrink-0'>
                     <img
                       src={userData?.photoURL || '/default-avatar.png'}
                       alt='Profile'
-                      className='w-32 h-32 lg:w-40 lg:h-40 rounded-full border-4 border-[#121212] object-cover'
+                      className='w-24 h-24 lg:w-40 lg:h-40 rounded-full border-4 border-[#121212] object-cover'
                     />
-                    {/* Updated Rank Display */}
+                    {/* Rank Display */}
                     {gamificationInfo && (
                       <div
-                        className='absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#EA6100] text-black px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer hover:scale-105 transition-transform'
+                        className='absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#EA6100] text-black px-2 lg:px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer hover:scale-105 transition-transform'
                         onClick={() => navigateTo('/gamification')}
                         title='View Gamification Hub'
                       >
@@ -432,31 +478,35 @@ const AccountPage = () => {
                       </div>
                     )}
                   </div>
-                  <div className='text-center lg:text-left lg:mb-4'>
-                    <div className='flex items-center gap-2 justify-center lg:justify-start'>
-                      <h1 className='text-2xl lg:text-3xl font-bold text-white'>
+
+                  {/* Username & Display Name */}
+                  <div className='text-left flex-1 min-w-0 lg:mb-4'>
+                    <div className='flex items-center gap-2'>
+                      <h1 className='text-xl lg:text-3xl font-bold text-white truncate'>
                         {userData?.displayName || 'User'}
                       </h1>
                       {userData?.isVerified && (
-                        <span className='text-[#EA6100] text-xl'>✓</span>
+                        <span className='text-[#EA6100] text-lg lg:text-xl flex-shrink-0'>✓</span>
                       )}
                     </div>
-                    <p className='text-gray-400 mt-1'>
+                    <p className='text-gray-400 text-sm lg:text-base mt-0.5 truncate'>
                       @{userData?.displayName?.toLowerCase().replace(/\s+/g, '') || 'user'}
                     </p>
                     {userData?.title && (
-                      <p className='text-gray-500 text-sm mt-1'>{userData.title}</p>
+                      <p className='text-gray-500 text-xs lg:text-sm mt-0.5 truncate'>{userData.title}</p>
                     )}
                   </div>
                 </div>
 
-                <div className='hidden lg:flex lg:mb-4'>
+                {/* Right: Edit Profile Button (Mobile & Desktop) */}
+                <div className='flex-shrink-0 lg:mb-4'>
                   <button
                     onClick={() => navigateTo('/settings/edit-profile')}
-                    className='flex items-center gap-2 bg-[#292929] hover:bg-[#3a3a3a] text-white px-6 py-2.5 rounded-lg transition-colors'
+                    className='flex items-center gap-1.5 lg:gap-2 bg-[#292929] hover:bg-[#3a3a3a] text-white px-3 lg:px-6 py-2 lg:py-2.5 rounded-lg transition-colors text-sm lg:text-base font-medium'
                   >
-                    <Edit2 size={18} />
-                    <span>Edit Profile</span>
+                    <Edit2 size={16} className='lg:w-[18px] lg:h-[18px]' />
+                    <span className='hidden sm:inline'>Edit Profile</span>
+                    <span className='sm:hidden'>Edit</span>
                   </button>
                 </div>
               </div>
@@ -773,8 +823,8 @@ const AccountPage = () => {
 
               </div>
 
-              {/* Right Column - Quick Actions */}
-              <div className='lg:col-span-1 space-y-6'>
+              {/* Right Column - Quick Actions (Desktop Only) */}
+              <div className='hidden lg:block lg:col-span-1 space-y-6'>
                 <div className='bg-[#1a1a1a] rounded-xl p-5 lg:p-6 lg:sticky lg:top-6'>
                   <h3 className='text-xl font-semibold text-[#EA6100] mb-4'>
                     Quick Actions

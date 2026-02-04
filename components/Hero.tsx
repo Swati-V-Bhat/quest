@@ -26,6 +26,13 @@ const Hero = () => {
     }
   };
 
+  const handleScrollToIntroduction = () => {
+    const introducingQuestsSection = document.getElementById('introducing-quests');
+    if (introducingQuestsSection) {
+      introducingQuestsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <>
       <div className="relative w-full min-h-screen overflow-hidden bg-black">
@@ -59,10 +66,10 @@ const Hero = () => {
               </button>
 
               <button
-                onClick={handleActionClick}
+                onClick={handleScrollToIntroduction}
                 className='px-8 py-4 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 text-white rounded-full font-medium text-lg transition-all duration-300 hover:-translate-y-1 w-full sm:w-auto flex items-center justify-center gap-2'
               >
-                <span>Create Quest</span>
+                <span>What's Quest ?</span>
               </button>
             </div>
           </div>
