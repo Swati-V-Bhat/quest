@@ -774,6 +774,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import Logo from '../../public/oq_logo.svg';
 // import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { Button } from '../ui/button';
 
 
 interface CreatePostModalProps {
@@ -1203,7 +1204,8 @@ const CreatePostModal = ({ onClose, user }: CreatePostModalProps) => {
       onClose();
     } catch (error) {
       console.error('Error creating post:', error);
-      setErrorMessage('Failed to create post. Please try again.');
+      // Show actual error message for debugging
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to create post. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -1222,8 +1224,8 @@ const CreatePostModal = ({ onClose, user }: CreatePostModalProps) => {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-800">
             <div className="flex gap-3">
-              <button className={`text-lg font-semibold ${post ? 'text-white' : 'text-gray-400'}`} onClick={() => showMode('post')}>Post</button>
               <button className={`text-lg font-semibold ${quest ? 'text-white' : 'text-gray-400'}`} onClick={() => showMode('quest')}>Quest</button>
+              <button className={`text-lg font-semibold ${post ? 'text-white' : 'text-gray-400'}`} onClick={() => showMode('post')}>Post</button>
             </div>
 
             <button
@@ -1398,7 +1400,7 @@ const CreatePostModal = ({ onClose, user }: CreatePostModalProps) => {
                   )}
                 </div>
 
-                
+
               </div>
 
               {/* Footer */}
@@ -1410,9 +1412,14 @@ const CreatePostModal = ({ onClose, user }: CreatePostModalProps) => {
                   </div>
                 )}
 
-                <button onClick={handlePost} disabled={loading} className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-gray-700 disabled:to-gray-700 text-white font-semibold py-3 rounded-xl transition-all disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                  {loading ? (<><Loader2 className="w-5 h-5 animate-spin" /><span>Posting...</span></>) : (<span>Post</span>)}
-                </button>
+                <Button
+                  onClick={handlePost}
+                  disabled={loading}
+                  isLoading={loading}
+                  className="w-full rounded-xl py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold"
+                >
+                  Post
+                </Button>
 
                 {/* Helper text for missing fields */}
                 {!errorMessage && (!text.trim() || !locationString.trim() || selectedImages.length === 0) && (
@@ -1428,27 +1435,34 @@ const CreatePostModal = ({ onClose, user }: CreatePostModalProps) => {
 
           {/* QUEST MODE */}
           {quest && (
+            <div className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div className='flex flex-col items-center gap-6 py-8'>
+                  <img src="/oq_logo.svg" alt="OnQuest Logo" className='w-24 h-24 object-contain' style={{ filter: 'invert(58%) sepia(80%) saturate(2476%) hue-rotate(358deg) brightness(101%) contrast(99%)' }} />
 
-            <div className="p-6 flex flex-col gap-4">
-              <div className='flex flex-col gap-6'>
-                <img src="./oq_logo.svg" alt="" className='w-1/6 h-1/6 text-orange-500' style={{ color: 'orange' }} />
-                {/* <textarea
-                        placeholder="Share your latest trip.."
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        rows={3}
-                        className="w-full bg-transparent text-white placeholder-gray-400 focus:outline-none resize-none text-lg border-2"
-                    /> */}
-                <h1 className='text-5xl font-bold mb-4'>Share Your Latest Trip</h1>
-                <p className='text-xl text-gray-200 '>
-                  {/* Share your quest and let the world know about your adventures! */}
-                  Inspire and help fellow follow travellers by posting your journey from
-                  photos,moments,tips and memories that deserve to be seen</p>
-
-
+                  <div className='text-center max-w-md'>
+                    <h1 className='text-2xl font-bold mb-3 text-white'>Share Your Latest Trip</h1>
+                    <p className='text-base text-gray-300'>
+                      Inspire and help fellow travellers by posting your journey from
+                      photos, moments, tips and memories that deserve to be seen
+                    </p>
+                  </div>
+                </div>
               </div>
-              <button className="w-full bg-orange-500 border border-gray-700 hover:border-orange-400 hover:bg-gray-800/60 text-white py-3 rounded-xl transition-all" onClick={() => router.push('/quest')}> + Create Quest</button>
 
+              {/* Footer */}
+              <div className="p-4 border-t border-gray-800">
+                <Button
+                  onClick={() => {
+                    onClose();
+                    router.push('/quest');
+                  }}
+                  variant="default"
+                  className="w-full rounded-xl py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold"
+                >
+                  + Create Quest
+                </Button>
+              </div>
             </div>
           )}
         </div>
