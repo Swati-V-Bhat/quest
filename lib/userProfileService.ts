@@ -4,6 +4,7 @@ import { db } from './firebase';
 interface UserProfile {
     uid: string;
     name: string;
+    username?: string;
     email?: string;
     photoURL?: string;
     bio?: string;
@@ -105,6 +106,7 @@ export const getUserProfile = async (
         const userData: UserProfile = {
             uid,
             name: data.name,
+            username: data.username ?? undefined,
             email: data.email ?? undefined, // Ensure null is converted to undefined for optional fields
             photoURL: data.photoURL ?? undefined,
             bio: data.bio ?? undefined,
@@ -126,6 +128,79 @@ export const getUserProfile = async (
     } catch (error) {
         console.error(`Error fetching user profile ${uid}:`, error);
         return null;
+    }
+};
+
+/**
+ * Check if a username is available
+ */
+export const checkUsernameAvailability = async (username: string): Promise<boolean> => {
+    try {
+        // Validate format first: 3-30 chars, alphanumeric + underscore
+        if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+            return false;
+        }
+
+        const usernameDoc = await getDoc(doc(db, 'usernames', username.toLowerCase()));
+        return !usernameDoc.exists();
+    } catch (error) {
+        console.error(`Error checking username availability for ${username}:`, error);
+        return false;
+    }
+};
+
+/**
+ * Claim a username for a user
+ * This handles both setting the username in the users collection AND the usernames collection
+ */
+import { setDoc, runTransaction } from 'firebase/firestore';
+
+export const claimUsername = async (uid: string, username: string): Promise<{ success: boolean; error?: string }> => {
+    const formattedUsername = username.toLowerCase();
+
+    // Validate format
+    if (!/^[a-zA-Z0-9_]{3,30}$/.test(formattedUsername)) {
+        return { success: false, error: 'Invalid username format. Use 3-30 alphanumeric characters or underscores.' };
+    }
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            // 1. Check if username is already taken
+            const usernameRef = doc(db, 'usernames', formattedUsername);
+            const usernameDoc = await transaction.get(usernameRef);
+
+            if (usernameDoc.exists()) {
+                throw new Error('Username is already taken');
+            }
+
+            // 2. Check if user already has a username to release (optional, for future username changes)
+            const userRef = doc(db, 'users', uid);
+            const userDoc = await transaction.get(userRef);
+            if (userDoc.exists()) {
+                const currentUsername = userDoc.data().username;
+                if (currentUsername) {
+                    const oldUsernameRef = doc(db, 'usernames', currentUsername.toLowerCase());
+                    transaction.delete(oldUsernameRef);
+                }
+            }
+
+            // 3. Reserve the new username
+            transaction.set(usernameRef, { uid, createdAt: new Date() });
+
+            // 4. Update the user profile
+            transaction.update(userRef, {
+                username: formattedUsername,
+                usernameUpdatedAt: new Date()
+            });
+        });
+
+        // Invalidate cache so next fetch gets the new username
+        userCache.invalidate(uid);
+
+        return { success: true };
+    } catch (error: any) {
+        console.error(`Error claiming username ${username} for ${uid}:`, error);
+        return { success: false, error: error.message || 'Failed to claim username' };
     }
 };
 

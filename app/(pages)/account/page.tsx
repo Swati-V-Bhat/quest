@@ -531,15 +531,6 @@ const AccountPage = () => {
                   </div>
                   <div className='text-gray-400 text-sm'>Following</div>
                 </div>
-                {/* Updated QP Display */}
-                {gamificationInfo && (
-                  <div className='col-span-3 lg:col-span-1'>
-                    <div className='text-xl lg:text-2xl font-bold text-[#EA6100]'>
-                      {gamificationInfo.totalQPs} QP
-                    </div>
-                    <div className='text-gray-400 text-sm'>Quest Points</div>
-                  </div>
-                )}
               </div>
 
               {/* Bio */}

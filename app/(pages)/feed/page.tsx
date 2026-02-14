@@ -39,7 +39,8 @@ import LazyImage from '@/components/LazyImage';
 
 
 // Helper function to generate username from display name
-const generateUsername = (displayName: string | null | undefined): string => {
+const generateUsername = (displayName: string | null | undefined, username?: string): string => {
+  if (username) return username;
   if (!displayName) return 'user';
   return displayName.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9_]/g, '');
 };
@@ -180,7 +181,7 @@ const FeedRightSidebar = ({ user, userData, style }: any) => {
             {user?.displayName || 'User'}
           </h3>
           <p className="text-gray-400 text-sm mb-3">
-            @{generateUsername(user?.displayName)}
+            @{generateUsername(user?.displayName, (userData as any)?.username)}
           </p>
 
           {userData?.bio && (
@@ -514,6 +515,11 @@ const Feed = () => {
               ...post,
               isSaved: (userDetails as any).savedPosts.includes(post.id) || false
             })));
+          }
+
+          // Check for missing username and redirect
+          if ((userDetails as any) && !(userDetails as any).username) {
+            router.replace('/onboarding/username');
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
@@ -973,9 +979,8 @@ const Feed = () => {
             <div className="flex-1">
               <div className="flex items-baseline gap-2">
                 <h3 className="text-base font-medium text-white cursor-pointer hover:underline" onClick={() => router.push(`/profile/${post.author.id}`)}>
-                  {post.author.name}
+                  @{generateUsername(post.author.name, post.author.username)}
                 </h3>
-                <p className="text-gray-400 text-xs">@{generateUsername(post.author.name)}</p>
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <p className="text-gray-400 text-xs">{formatTime(post.metadata.createdAt)} · {post.metadata.location}</p>
@@ -1416,9 +1421,8 @@ const MobilePostCard = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline gap-2 truncate">
               <h3 className="text-sm font-medium text-white cursor-pointer hover:underline truncate" onClick={() => router.push(`/profile/${post.authorId}`)}>
-                {post.userName}
+                @{generateUsername(post.userName, post.username)}
               </h3>
-              <p className="text-xs text-gray-400 truncate">@{generateUsername(post.userName)}</p>
             </div>
             <div className="flex items-center gap-1 text-xs text-gray-400 truncate mt-0.5">
               {post.location && (

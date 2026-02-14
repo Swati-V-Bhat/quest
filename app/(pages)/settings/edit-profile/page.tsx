@@ -5,13 +5,15 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db, storage } from '@/lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { ArrowLeft, Camera, X, Loader2 } from 'lucide-react';
+import { checkUsernameAvailability, claimUsername } from '@/lib/userProfileService';
+import { ArrowLeft, Camera, X, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import NavBar from '@/components/LeftSideNav';
 import Footer from '@/components/phoneComponents/Footer';
 import Image from 'next/image';
 
 interface UserData {
   displayName?: string;
+  username?: string;
   email?: string;
   photoURL?: string;
   backgroundURL?: string;
@@ -32,9 +34,15 @@ const EditProfilePage = () => {
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingBackground, setUploadingBackground] = useState(false);
 
+  // Username check state
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
+  const [originalUsername, setOriginalUsername] = useState('');
+
   // Form data
   const [formData, setFormData] = useState<UserData>({
     displayName: '',
+    username: '',
     email: '',
     photoURL: '',
     backgroundURL: '',
@@ -72,6 +80,7 @@ const EditProfilePage = () => {
         const data = userDoc.data() as UserData;
         setFormData({
           displayName: data.displayName || '',
+          username: (data as any).username || '', // Handle cases where username might not exist on type yet
           email: data.email || '',
           photoURL: data.photoURL || '',
           backgroundURL: data.backgroundURL || '',
@@ -85,6 +94,7 @@ const EditProfilePage = () => {
         });
         setProfilePreview(data.photoURL || '');
         setBackgroundPreview(data.backgroundURL || '');
+        setOriginalUsername((data as any).username || '');
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -93,8 +103,39 @@ const EditProfilePage = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'username') {
+      // Sanitize username
+      const sanitized = value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+      setFormData(prev => ({ ...prev, [name]: sanitized }));
+      setIsUsernameAvailable(null);
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
+
+  // Debounce username check
+  useEffect(() => {
+    const checkUsername = async () => {
+      if (!formData.username || formData.username === originalUsername) {
+        setIsUsernameAvailable(null);
+        return;
+      }
+
+      if (formData.username.length < 3) {
+        setIsUsernameAvailable(null);
+        return;
+      }
+
+      setIsCheckingUsername(true);
+      const available = await checkUsernameAvailability(formData.username);
+      setIsUsernameAvailable(available);
+      setIsCheckingUsername(false);
+    };
+
+    const timer = setTimeout(checkUsername, 500);
+    return () => clearTimeout(timer);
+  }, [formData.username, originalUsername]);
 
   const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -113,7 +154,7 @@ const EditProfilePage = () => {
       const storageRef = ref(storage, `profile-images/${user.uid}/${Date.now()}_${file.name}`);
       await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(storageRef);
-      
+
       setFormData(prev => ({ ...prev, photoURL: downloadURL }));
     } catch (error) {
       console.error('Error uploading profile image:', error);
@@ -140,7 +181,7 @@ const EditProfilePage = () => {
       const storageRef = ref(storage, `background-images/${user.uid}/${Date.now()}_${file.name}`);
       await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(storageRef);
-      
+
       setFormData(prev => ({ ...prev, backgroundURL: downloadURL }));
     } catch (error) {
       console.error('Error uploading background image:', error);
@@ -164,8 +205,24 @@ const EditProfilePage = () => {
     e.preventDefault();
     if (!user) return;
 
+    // Prevent submit if username is invalid or taken (only if changed)
+    if (formData.username !== originalUsername) {
+      if (isUsernameAvailable === false || (formData.username && formData.username.length < 3)) {
+        alert('Please select a valid available username');
+        return;
+      }
+    }
+
     setSaving(true);
     try {
+      // Handle username change separately if needed
+      if (formData.username && formData.username !== originalUsername) {
+        const result = await claimUsername(user.uid, formData.username);
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to update username');
+        }
+      }
+
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         displayName: formData.displayName,
@@ -183,9 +240,9 @@ const EditProfilePage = () => {
 
       alert('Profile updated successfully!');
       router.push('/account');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating profile:', error);
-      alert('Failed to update profile. Please try again.');
+      alert(error.message || 'Failed to update profile. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -217,9 +274,9 @@ const EditProfilePage = () => {
     <div className='min-h-screen bg-black'>
       {/* Desktop Navbar */}
       <div className="hidden lg:block">
-        <NavBar 
-          user={user} 
-          onSignOut={() => {}} 
+        <NavBar
+          user={user}
+          onSignOut={() => { }}
           style={{
             left: containerStartExpression,
             right: 'auto',
@@ -231,12 +288,12 @@ const EditProfilePage = () => {
       {/* Desktop Main Content */}
       <div className='hidden lg:block' style={mainWidthStyle}>
         <div className='w-full max-w-[65vw]'>
-          
+
           {/* Header */}
           <div className='sticky top-0 z-10 bg-[#121212] border-b border-gray-700'>
             <div className='flex items-center justify-between px-5 lg:px-8 py-4'>
               <div className='flex items-center gap-4'>
-                <button 
+                <button
                   onClick={() => router.back()}
                   className='text-white hover:text-[#EA6100] transition-colors'
                 >
@@ -263,7 +320,7 @@ const EditProfilePage = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className='px-5 lg:px-8 py-8 pb-20 lg:pb-8'>
-            
+
             {/* Background Image */}
             <div className='mb-8'>
               <label className='block text-white font-semibold mb-3'>Background Image</label>
@@ -393,7 +450,7 @@ const EditProfilePage = () => {
             {/* Basic Information */}
             <div className='bg-[#1a1a1a] rounded-xl p-6 mb-6'>
               <h2 className='text-xl font-bold text-white mb-4'>Basic Information</h2>
-              
+
               <div className='space-y-4'>
                 <div>
                   <label className='block text-white font-medium mb-2'>Display Name *</label>
@@ -408,6 +465,46 @@ const EditProfilePage = () => {
                     placeholder='Your display name'
                   />
                   <p className='text-gray-500 text-sm mt-1'>{(formData.displayName ?? '').length}/50 characters</p>
+                </div>
+
+                <div>
+                  <label className='block text-white font-medium mb-2'>Username</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500">@</span>
+                    </div>
+                    <input
+                      type='text'
+                      name='username'
+                      value={formData.username}
+                      onChange={handleInputChange}
+                      minLength={3}
+                      maxLength={30}
+                      className={`w-full bg-[#292929] text-white pl-8 pr-10 py-3 rounded-lg border focus:outline-none transition-colors
+                        ${isUsernameAvailable === true ? 'border-green-500 focus:border-green-500' :
+                          isUsernameAvailable === false ? 'border-red-500 focus:border-red-500' :
+                            'border-gray-700 focus:border-[#EA6100]'}`}
+                      placeholder='username'
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      {isCheckingUsername ? (
+                        <Loader2 className="w-5 h-5 text-gray-500 animate-spin" />
+                      ) : isUsernameAvailable === true ? (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      ) : isUsernameAvailable === false ? (
+                        <XCircle className="w-5 h-5 text-red-500" />
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="text-sm mt-1 min-h-[20px]">
+                    {isUsernameAvailable === false && (
+                      <p className="text-red-500">Username is already taken</p>
+                    )}
+                    {formData.username !== originalUsername && isUsernameAvailable === true && (
+                      <p className="text-green-500">Username is available</p>
+                    )}
+                    <p className="text-gray-500">3-30 characters, letters, numbers, and underscores only</p>
+                  </div>
                 </div>
 
                 <div>
@@ -468,7 +565,7 @@ const EditProfilePage = () => {
             {/* Social Links */}
             <div className='bg-[#1a1a1a] rounded-xl p-6 mb-6'>
               <h2 className='text-xl font-bold text-white mb-4'>Social Links</h2>
-              
+
               <div className='space-y-4'>
                 <div>
                   <label className='block text-white font-medium mb-2'>Website</label>
