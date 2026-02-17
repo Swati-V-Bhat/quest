@@ -939,7 +939,8 @@ const Feed = () => {
               commentCount: post.stats.comments || 0,
               shareCount: post.stats.shares || 0,
               likedBy: post.stats.likedBy || [],
-              questContext: post.questContext
+              questContext: post.questContext,
+              username: post.author.username // Pass username
             }}
             currentUser={user}
             onLike={() => handleLike(post.id)}
@@ -1385,7 +1386,8 @@ const MobilePostCard = ({
             commentCount: post.commentCount || 0,
             shareCount: post.shareCount || 0,
             likedBy: post.likedBy || [],
-            questContext: post.questContext
+            questContext: post.questContext,
+            username: post.username // Pass username
           }}
           currentUser={currentUser}
           onLike={onLike}
@@ -1606,6 +1608,7 @@ const MobileFeedPage = () => {
     postType: post.postType || 'regular',
     questData: post.questData || post.questContext || null,
     questContext: post.questContext || null,
+    username: post.username || post.author?.username, // Extract username
   });
 
   const resetSearch = () => {

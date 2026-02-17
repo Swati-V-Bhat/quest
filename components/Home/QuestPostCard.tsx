@@ -5,7 +5,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Heart, MessageCircle, Share2, Bookmark, MoreVertical, HeartPulse, UserPlus, UserCheck } from 'lucide-react';
 import { FaPlus, FaHeart, FaRegCommentDots, FaShareSquare, FaBookmark, FaRegBookmark } from 'react-icons/fa';
-import { followUser as followUserService, unfollowUser as unfollowUserService, getFollowingList } from '@/lib/followService';
 
 interface QuestPostCardProps {
   post: {
@@ -27,6 +26,7 @@ interface QuestPostCardProps {
       type?: string; // 'ai_generated' for AI quests
       isAiGenerated?: boolean;
     };
+    username?: string; // Added username field
   };
   currentUser: any;
   onLike: () => void;
@@ -108,9 +108,8 @@ export const QuestPostCard = ({
                 className="text-white font-medium text-sm cursor-pointer hover:underline"
                 onClick={() => router.push(`/profile/${authorId}`)}
               >
-                {post.userName}
+                @{post.username || post.userName.toLowerCase().replace(/\s+/g, '')}
               </h3>
-              <p className="text-gray-400 text-xs">@{post.userName.toLowerCase().replace(/\s+/g, '')}</p>
             </div>
             <p className="text-gray-400 text-xs">Shared a Quest · {formatTime(post.createdAt)}</p>
           </div>
@@ -183,7 +182,7 @@ export const QuestPostCard = ({
         )}
 
         {/* Quest Tag - Gen Z Style with AI TRIP variant */}
-        <div className="absolute top-4 right-4 z-9">
+        <div className="absolute top-4 right-4 z-10">
           <div className="relative group">
             {post.questContext?.type === 'ai_generated' || post.questContext?.isAiGenerated ? (
               <>
@@ -352,9 +351,8 @@ export const MobileQuestPostCard = ({
                 className="text-white font-medium text-sm cursor-pointer hover:underline truncate block"
                 onClick={() => router.push(`/profile/${authorId}`)}
               >
-                {post.userName}
+                @{post.username || post.userName.toLowerCase().replace(/\s+/g, '')}
               </span>
-              <span className="text-gray-500 text-xs truncate">@{post.userName.toLowerCase().replace(/\s+/g, '')}</span>
             </div>
             <p className="text-gray-400 text-xs truncate mt-0.5">
               Shared a Quest · {formatTime(post.createdAt)}
@@ -407,7 +405,7 @@ export const MobileQuestPostCard = ({
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
 
         {/* Quest Tag - Gen Z Style (Mobile) with AI TRIP variant */}
-        <div className="absolute top-4 right-4 z-9">
+        <div className="absolute top-4 right-4 z-10">
           <div className="relative group">
             {post.questContext?.type === 'ai_generated' || post.questContext?.isAiGenerated ? (
               <>
