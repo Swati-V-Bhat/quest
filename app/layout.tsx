@@ -13,7 +13,11 @@ const mont = Montserrat({
 })
 
 export const metadata = {
-  title: 'OnQuest',
+  metadataBase: new URL('https://onquest.in'),
+  title: {
+    default: 'OnQuest | Plan your perfect trip with AI',
+    template: '%s | OnQuest'
+  },
   description: 'Plan your perfect trip with AI assistance',
   icons: {
     icon: '/oq_logo.svg',

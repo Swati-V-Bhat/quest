@@ -696,6 +696,28 @@ const questService = {
   },
 
   /**
+   * Get all public quest IDs for sitemap generation
+   * Limited to a reasonable number to prevent massive reads, or fetch all if needed
+   */
+  async getAllPublicQuestIds(): Promise<string[]> {
+    try {
+      const questsRef = collection(db, 'quest');
+      const q = query(
+        questsRef,
+        where('isPublic', '==', true),
+        orderBy('updatedAt', 'desc'),
+        limit(1000) // Safety limit for now
+      );
+
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => doc.id);
+    } catch (error) {
+      console.error('Error fetching all public quest IDs:', error);
+      return [];
+    }
+  },
+
+  /**
    * Updates the itinerary of a quest
    */
   async updateQuest(questId: string, uid: string, updatedData: object) {
