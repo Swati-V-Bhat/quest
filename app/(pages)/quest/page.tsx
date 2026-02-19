@@ -12,6 +12,7 @@ import Navbar from '@/components/LeftSideNav';
 import PhotoBasedQuestCreation from '@/components/quest/PhotoBasedQuestCreation';
 import questService from '@/lib/questService';
 import { LocationInput } from '@/components/common/LocationInput';
+import PopularDestinations from '@/components/Explore/PopularDestinations';
 
 const QUEST_DESKTOP_MAIN_WIDTH = 60;
 const QUEST_LEFT_NAV_WIDTH = 280;
@@ -33,72 +34,6 @@ interface TripData {
   description?: string;
 }
 
-const PopularDestinationCard = ({
-  imageUrl,
-  title,
-  subtitle
-}: {
-  imageUrl: string;
-  title: string;
-  subtitle: string;
-}) => {
-  return (
-    <div className="relative shrink-0 w-[216px] h-[224px] rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow cursor-pointer">
-      <img
-        src={imageUrl}
-        alt={title}
-        className="absolute h-full w-full object-cover"
-      />
-      <div className="absolute bottom-0 w-full h-1/2 bg-linear-to-t from-black/70 to-transparent" />
-      <div className="absolute bottom-3 left-3 text-white">
-        <p className="text-sm font-semibold leading-tight">{title}</p>
-        <p className="text-xs text-gray-200">{subtitle}</p>
-      </div>
-    </div>
-  );
-};
-
-
-
-const DesktopShell = ({
-  user,
-  children,
-}: {
-  user: any;
-  children: ReactNode;
-}) => {
-  const totalFixedWidth = QUEST_LEFT_NAV_WIDTH + QUEST_SIDEBAR_GAP;
-
-  const containerStartExpression = `calc((100vw - (${QUEST_LEFT_NAV_WIDTH}px + ${QUEST_DESKTOP_MAIN_WIDTH}vw + ${QUEST_SIDEBAR_GAP}px)) / 2)`;
-
-  const mainLeftExpression = `calc(${containerStartExpression} + ${QUEST_LEFT_NAV_WIDTH + QUEST_SIDEBAR_GAP}px)`;
-
-  const mainWidthStyle: React.CSSProperties = {
-    width: `${QUEST_DESKTOP_MAIN_WIDTH}vw`,
-    marginLeft: mainLeftExpression,
-    marginRight: 'auto',
-  };
-
-  return (
-    <div className="hidden md:block min-h-screen bg-black text-white relative overflow-x-hidden">
-      <Navbar
-        user={user}
-        onSignOut={() => {/* implement signout */ }}
-        style={{
-          left: containerStartExpression,
-          right: 'auto',
-          width: `${QUEST_LEFT_NAV_WIDTH}px`,
-        }}
-      />
-      <main className="min-h-screen" style={mainWidthStyle}>
-        <div className="w-full max-w-[65vw]">
-          {children}
-        </div>
-      </main>
-    </div>
-  );
-};
-
 const QuestPage = () => {
   const [user, loading] = useAuthState(auth);
   const [currentStep, setCurrentStep] = useState(0);
@@ -112,15 +47,6 @@ const QuestPage = () => {
     startDate: '',
     endDate: '',
   });
-
-  const popularDestinations = [
-    { title: "Catch the Sunrise", subtitle: "Nandi Hills", imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop" },
-    { title: "Serene Backwaters", subtitle: "Kerala", imageUrl: "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?w=800&h=600&fit=crop" },
-    { title: "Majestic Forts", subtitle: "Rajasthan", imageUrl: "https://images.unsplash.com/photo-1500534623283-312aade485b7?w=800&h=600&fit=crop" },
-    { title: "Misty Mountains", subtitle: "Himachal", imageUrl: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&h=600&fit=crop" },
-    { title: "Golden Sands", subtitle: "Rann of Kutch", imageUrl: "https://images.unsplash.com/photo-1494526585095-c41746248156?w=800&h=600&fit=crop" },
-    { title: "Lush Tea Gardens", subtitle: "Munnar", imageUrl: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=800&h=600&fit=crop" },
-  ];
 
   useEffect(() => {
     if (!loading && !user) {
@@ -270,22 +196,7 @@ const QuestPage = () => {
           </section>
 
           {/* Popular Destinations Section */}
-          <section>
-            <div className="mb-6">
-              <h2 className="text-3xl font-bold mb-2">Popular Destinations</h2>
-              <p className="text-gray-400">Explore trending travel spots</p>
-            </div>
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none">
-              {popularDestinations.map((dest, index) => (
-                <PopularDestinationCard
-                  key={index}
-                  title={dest.title}
-                  subtitle={dest.subtitle}
-                  imageUrl={dest.imageUrl}
-                />
-              ))}
-            </div>
-          </section>
+          <PopularDestinations />
         </DesktopShell>
 
         {/* Mobile Layout */}
@@ -324,20 +235,7 @@ const QuestPage = () => {
             </div>
 
             <div className="px-4 py-6 mb-20">
-              <div className="mb-4">
-                <h2 className="text-xl font-bold mb-1">Popular Destinations</h2>
-                <p className="text-sm text-gray-400">Explore trending travel spots</p>
-              </div>
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-                {popularDestinations.map((dest, index) => (
-                  <PopularDestinationCard
-                    key={index}
-                    title={dest.title}
-                    subtitle={dest.subtitle}
-                    imageUrl={dest.imageUrl}
-                  />
-                ))}
-              </div>
+              <PopularDestinations />
             </div>
           </main>
           <Footer />
