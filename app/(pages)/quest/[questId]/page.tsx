@@ -1,6 +1,25 @@
 import { Metadata } from 'next';
-import questService from '@/lib/questService';
+import { db as adminDb } from '@/lib/firebaseAdmin';
 import QuestClient from './QuestClient';
+
+/**
+ * Fetches a quest using the Firebase Admin SDK.
+ * This bypasses Firestore security rules, which is correct for a server-side
+ * read (the data is only used for metadata/SEO, not sent directly to the client
+ * in an unsafe way). The actual interactive quest data is loaded client-side
+ * via QuestClient with the authenticated user context.
+ */
+async function getQuestByIdAdmin(questId: string) {
+  try {
+    const questRef = adminDb.collection('quest').doc(questId);
+    const questSnap = await questRef.get();
+    if (!questSnap.exists) return null;
+    return { id: questSnap.id, ...questSnap.data() } as any;
+  } catch (error) {
+    console.error('Server  Error fetching quest by ID:', error);
+    return null;
+  }
+}
 
 // Props type for the page - Next.js 15 requires params to be a Promise
 type Props = {
@@ -14,7 +33,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const params = await props.params;
   const questId = params.questId;
-  const quest = await questService.getQuestById(questId);
+  const quest = await getQuestByIdAdmin(questId);
 
   if (!quest) {
     return {
@@ -48,14 +67,14 @@ export async function generateMetadata(
 export default async function QuestPage(props: Props) {
   const params = await props.params;
   const questId = params.questId;
-  const quest = await questService.getQuestById(questId);
+  const quest = await getQuestByIdAdmin(questId);
 
   // Prepare JSON-LD
   let jsonLd = null;
   if (quest) {
     jsonLd = {
       '@context': 'https://schema.org',
-      '@type': 'TouristAttraction', // Or 'TravelAction', 'Course', etc. depending on context. TouristAttraction is generic enough for destinations.
+      '@type': 'TouristAttraction',
       name: quest.title || quest.destination,
       description: quest.description || `Explore ${quest.destination}`,
       image: quest.coverImageUrl ? [quest.coverImageUrl] : [],
