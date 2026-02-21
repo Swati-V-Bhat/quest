@@ -472,7 +472,6 @@ const DesktopExplore = () => {
           </div>
 
           <div className="p-6 w-full border-b border-gray-700">
-            <PopularDestinations />
             {searchQuery && (
               <div>
                 {searching ? (
@@ -637,6 +636,10 @@ const DesktopExplore = () => {
                   </div>
                 )}
               </div>
+
+              <div className="mb-8">
+                <PopularDestinations />
+              </div>
             </div>
           )}
         </div>
@@ -774,9 +777,6 @@ const MobileExplore = () => {
     <>
       <div className='bg-black text-white min-h-screen'>
         <Header />
-        <div className="px-4 py-4">
-          <PopularDestinations />
-        </div>
 
         <div className="relative bg-[url('https://images.unsplash.com/photo-1521336575822-6da63fb45455?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8YWR2ZW50dXJlfGVufDB8fDB8fHww')] mb-5 bg-no-repeat bg-cover bg-center h-[420px] sm:h-[460px] pt-4 pb-24 overflow-hidden">
           <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/40 to-transparent" />
@@ -979,6 +979,10 @@ const MobileExplore = () => {
                 </p>
               </div>
             )}
+          </div>
+
+          <div className='mb-20'>
+            <PopularDestinations />
           </div>
         </div>
       </div>
