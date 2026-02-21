@@ -5,6 +5,7 @@ import React, { useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
+import { signOut as firebaseSignOut } from 'firebase/auth';
 import { MapPin, Calendar, Sparkles, Plus, Folder, ArrowLeft, ArrowRight } from 'lucide-react';
 import Header from '@/components/phoneComponents/header';
 import Footer from '@/components/phoneComponents/Footer';
@@ -33,6 +34,20 @@ interface TripData {
   title?: string;
   description?: string;
 }
+
+const DesktopShell = ({ user, children }: { user: NonNullable<ReturnType<typeof useAuthState>[0]>; children: ReactNode }) => (
+  <div className="hidden md:flex min-h-screen">
+    <div style={{ width: QUEST_LEFT_NAV_WIDTH, flexShrink: 0 }}>
+      <Navbar user={user} onSignOut={() => firebaseSignOut(auth)} />
+    </div>
+    <main
+      className="flex-1 overflow-y-auto px-10 py-8"
+      style={{ marginLeft: QUEST_SIDEBAR_GAP, maxWidth: `${QUEST_DESKTOP_MAIN_WIDTH}vw` }}
+    >
+      {children}
+    </main>
+  </div>
+);
 
 const QuestPage = () => {
   const [user, loading] = useAuthState(auth);
