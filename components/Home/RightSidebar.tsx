@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { followUser, unfollowUser } from '@/lib/postService';
+import { followUser, unfollowUser } from '@/lib/followService';
 import { getUserBadges, getLevelInfo } from '@/lib/firebaseSerive';
 import { User as UserType } from '@/app/types/index';
 import { UserPlus, UserCheck } from 'lucide-react';
@@ -57,17 +57,17 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ user, userData }) => {
         setPopularUsers(usersData.slice(0, 4));
       }
     );
-    
+
     return () => unsubscribe();
   }, []);
 
   const handleFollow = async (uid: string) => {
     if (!user?.uid || uid === user.uid) return;
-    
+
     try {
       const userToFollow = popularUsers.find(u => u.id === uid);
       const isFollowing = userToFollow?.followers?.includes(user.uid);
-      
+
       if (isFollowing) {
         await unfollowUser(user.uid, uid);
       } else {
@@ -83,22 +83,22 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ user, userData }) => {
       {/* User Profile Card */}
       <div className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden mb-4">
         <div className="h-24 bg-gradient-to-r from-[#F7CEB0] to-[#EA6100]"></div>
-        
+
         <div className="px-4 pb-4">
-          <img 
-            src={user?.photoURL || '/default-avatar.png'} 
+          <img
+            src={user?.photoURL || '/default-avatar.png'}
             alt={user?.displayName}
             className="w-20 h-20 rounded-full border-4 border-gray-900 -mt-10 mb-3 object-cover cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => router.push(`/profile/${user?.uid}`)}
           />
-          
+
           <h3 className="text-white text-lg font-bold mb-1 cursor-pointer hover:underline" onClick={() => router.push(`/profile/${user?.uid}`)}>
             {user?.displayName || 'User'}
           </h3>
           <p className="text-gray-400 text-sm mb-3">
             @{generateUsername(user?.displayName)}
           </p>
-          
+
           {userData?.bio && (
             <p className="text-gray-300 text-sm mb-3 line-clamp-2">
               {userData.bio}
@@ -131,7 +131,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ user, userData }) => {
                 )}
               </div>
               <div className="w-full bg-gray-800 rounded-full h-2">
-                <div 
+                <div
                   className="bg-gradient-to-r from-[#F7CEB0] to-[#EA6100] h-2 rounded-full transition-all"
                   style={{ width: `${(levelInfo.progress || 0) * 100}%` }}
                 ></div>
@@ -144,7 +144,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ user, userData }) => {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-white font-medium text-sm">Earned Badges</h4>
-                <button 
+                <button
                   onClick={() => router.push(`/profile/${user?.uid}#badges`)}
                   className="text-[#F7CEB0] text-xs hover:underline"
                 >
@@ -153,13 +153,13 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ user, userData }) => {
               </div>
               <div className="flex gap-2">
                 {badges.map(badge => (
-                  <div 
+                  <div
                     key={badge.id}
                     className="bg-[#F8EBE2] rounded-lg p-2 flex flex-col items-center min-w-[70px]"
                     title={badge.description}
                   >
-                    <img 
-                      src={badge.iconUrl} 
+                    <img
+                      src={badge.iconUrl}
                       alt={badge.name}
                       className="w-10 h-10 object-contain mb-1"
                     />
@@ -181,8 +181,8 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ user, userData }) => {
           {popularUsers.map((traveler) => (
             <div key={traveler.id} className="flex items-center justify-between">
               <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push(`/profile/${traveler.id}`)}>
-                <img 
-                  src={traveler.photoURL} 
+                <img
+                  src={traveler.photoURL}
                   alt={traveler.displayName}
                   className="w-10 h-10 rounded-full object-cover"
                 />
@@ -193,15 +193,14 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ user, userData }) => {
                   </p>
                 </div>
               </div>
-              
+
               {traveler.id !== user?.uid && (
                 <button
                   onClick={() => handleFollow(traveler.id)}
-                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    traveler.followers?.includes(user?.uid)
+                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${traveler.followers?.includes(user?.uid)
                       ? 'bg-gray-700 text-white hover:bg-gray-600'
                       : 'bg-[#F7CEB0] text-black hover:bg-[#EA6100] hover:text-white'
-                  }`}
+                    }`}
                 >
                   {traveler.followers?.includes(user?.uid) ? (
                     <UserCheck className="w-4 h-4" />

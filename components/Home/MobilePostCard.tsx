@@ -133,7 +133,8 @@ const MobilePostCard: React.FC<MobilePostCardProps> = ({
             <img
               src={post.imageUrls}
               alt="Post content"
-              className={`w-full h-full object-cover ${imageLoading ? 'opacity-0' : 'opacity-100'} transition-opacity`}
+              onClick={() => router.push(`/post/${post.id}`)}
+              className={`w-full h-full object-cover cursor-pointer ${imageLoading ? 'opacity-0' : 'opacity-100'} transition-opacity`}
               onLoad={() => setImageLoading(false)}
               onError={() => {
                 setImageError(true);

@@ -14,7 +14,7 @@ interface ShareModalProps {
     userProfilePic?: string;
     caption?: string;
     text?: string;
-    location?: string;
+    location?: string | null;
     questContext?: {
       questId?: string;
       questTitle?: string;
@@ -324,8 +324,8 @@ const ShareModal: React.FC<ShareModalProps> = ({ post, onClose }) => {
                       onClick={() => sendToUser(result)}
                       disabled={sentUsers.has(result.uid) || sending}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${sentUsers.has(result.uid)
-                          ? 'bg-green-500/20 text-green-400'
-                          : 'bg-orange-500 hover:bg-orange-600 text-white'
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-orange-500 hover:bg-orange-600 text-white'
                         }`}
                     >
                       {sentUsers.has(result.uid) ? (

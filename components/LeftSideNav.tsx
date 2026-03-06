@@ -5,6 +5,7 @@
 import React, { CSSProperties, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Home, Search, User, Bell, Mail, Icon, Settings, LogOut, Menu } from 'lucide-react';
+import { NotificationBadge } from '@/components/Notifications/NotificationBell';
 
 
 interface User {
@@ -153,11 +154,14 @@ const NavBar = ({ user, onSignOut, className = '', style }: NavBarProps) => {
                 }`}
               title={!isExpanded ? item.label : ''}
             >
-              <span className="shrink-0 w-6 h-6 flex items-center justify-center">
+              <span className="shrink-0 w-6 h-6 flex items-center justify-center relative">
                 {item.route === 'quest' ? (
                   <OnQuestIcon isActive={isActive} />
                 ) : (
                   <Icon />
+                )}
+                {item.route === 'notifications' && user?.uid && (
+                  <NotificationBadge userId={user.uid} />
                 )}
               </span>
               {isExpanded && <span className="text-lg">{item.label}</span>}

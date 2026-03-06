@@ -11,9 +11,10 @@ interface PostMenuProps {
   onClose: () => void;
   onDelete: () => void;
   onEdit?: () => void;
+  onShareClick?: () => void;
 }
 
-const PostMenu: React.FC<PostMenuProps> = ({ post, user, onClose, onDelete, onEdit }) => {
+const PostMenu: React.FC<PostMenuProps> = ({ post, user, onClose, onDelete, onEdit, onShareClick }) => {
   console.log('PostMenu debug:', {
     userUid: user?.uid,
     postAuthorId: post.authorId,
@@ -126,7 +127,10 @@ const PostMenu: React.FC<PostMenuProps> = ({ post, user, onClose, onDelete, onEd
           )}
 
           <button
-            onClick={handleShare}
+            onClick={() => {
+              onClose();
+              onShareClick?.();
+            }}
             className="w-full px-4 py-4 flex items-center gap-3 hover:bg-gray-800 transition-colors text-white"
           >
             <Share2 className="w-5 h-5" />

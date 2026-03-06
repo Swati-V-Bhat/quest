@@ -470,7 +470,7 @@ export const MobileQuestPostCard = ({
             <span className="text-sm font-medium">{post.commentCount || 0}</span>
           </button>
           <button
-            onClick={onComment}
+            onClick={onShare}
             className="text-gray-400 hover:text-[#F7CEB0] transition-colors"
           >
             <FaShareSquare size={24} />
