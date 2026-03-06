@@ -609,6 +609,14 @@ const questService = {
           const qpResult = await awardQuestSubmissionQPs(uid, questId);
           qpAwarded = qpResult.qpAwarded;
           console.log(`Awarded ${qpAwarded} QPs for manual quest creation`);
+
+          // Trigger quest scoring asynchronously for manual quests
+          // We fire and forget to not block the user flow
+          fetch('/api/score-quest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ questId })
+          }).catch(err => console.error('Failed to trigger quest scoring:', err));
         }
       } catch (qpError) {
         console.error('Error awarding QPs:', qpError);

@@ -1,9 +1,9 @@
 import { db } from './firebase';
-import { 
-  doc, 
-  updateDoc, 
-  increment, 
-  serverTimestamp, 
+import {
+  doc,
+  updateDoc,
+  increment,
+  serverTimestamp,
   writeBatch,
   getDoc,
   setDoc,
@@ -11,6 +11,8 @@ import {
   arrayUnion,
   arrayRemove
 } from 'firebase/firestore';
+import { notifyFollow } from './notificationService';
+import { addXP } from './xpService';
 
 /**
  * Get the list of user IDs that the current user is following
@@ -19,7 +21,7 @@ export const getFollowingList = async (userId: string): Promise<string[]> => {
   try {
     const userRef = doc(db, 'users', userId);
     const userDoc = await getDoc(userRef);
-    
+
     if (userDoc.exists()) {
       const userData = userDoc.data();
       return userData.following || [];
@@ -38,7 +40,7 @@ export const getFollowersList = async (userId: string): Promise<string[]> => {
   try {
     const userRef = doc(db, 'users', userId);
     const userDoc = await getDoc(userRef);
-    
+
     if (userDoc.exists()) {
       const userData = userDoc.data();
       return userData.followers || [];
@@ -87,7 +89,7 @@ export const followUser = async (currentUserId: string, targetUserId: string): P
 
     // Update current user's document - add to following array
     const currentUserRef = doc(db, 'users', currentUserId);
-    batch.update(currentUserRef, { 
+    batch.update(currentUserRef, {
       following: arrayUnion(targetUserId),
       followingCount: increment(1),
       updatedAt: serverTimestamp()
@@ -95,7 +97,7 @@ export const followUser = async (currentUserId: string, targetUserId: string): P
 
     // Update target user's document - add to followers array
     const targetUserRef = doc(db, 'users', targetUserId);
-    batch.update(targetUserRef, { 
+    batch.update(targetUserRef, {
       followers: arrayUnion(currentUserId),
       followersCount: increment(1),
       updatedAt: serverTimestamp()
@@ -113,7 +115,27 @@ export const followUser = async (currentUserId: string, targetUserId: string): P
     });
 
     await batch.commit();
-    
+
+    // Award XP
+    try {
+      await addXP(currentUserId, 'FOLLOW_USER', { targetUserId });
+    } catch (e) {
+      console.warn('Failed to add XP for following:', e);
+    }
+
+    // Notify the followed user (fire-and-forget)
+    getDoc(doc(db, 'users', currentUserId)).then((snap) => {
+      if (snap.exists()) {
+        const d = snap.data();
+        notifyFollow(
+          currentUserId,
+          d.displayName || 'Someone',
+          d.photoURL || '',
+          targetUserId
+        ).catch((e) => console.warn('Follow notification failed (non-fatal):', e));
+      }
+    }).catch(() => { });
+
     return { success: true };
   } catch (error) {
     console.error("Error following user:", error);
@@ -145,7 +167,7 @@ export const unfollowUser = async (currentUserId: string, targetUserId: string):
 
     // Update current user's document - remove from following array
     const currentUserRef = doc(db, 'users', currentUserId);
-    batch.update(currentUserRef, { 
+    batch.update(currentUserRef, {
       following: arrayRemove(targetUserId),
       followingCount: increment(-1),
       updatedAt: serverTimestamp()
@@ -153,7 +175,7 @@ export const unfollowUser = async (currentUserId: string, targetUserId: string):
 
     // Update target user's document - remove from followers array
     const targetUserRef = doc(db, 'users', targetUserId);
-    batch.update(targetUserRef, { 
+    batch.update(targetUserRef, {
       followers: arrayRemove(currentUserId),
       followersCount: increment(-1),
       updatedAt: serverTimestamp()

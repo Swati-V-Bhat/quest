@@ -5,7 +5,8 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { getUserData, getUserBadges } from '@/lib/firebaseSerive';
 import { calculateLevel } from '@/lib/xpService';
-import { addComment, savePost, unsavePost, sharePost, followUser, unfollowUser } from '@/lib/postService';
+import { addComment, savePost, unsavePost, sharePost } from '@/lib/postService';
+import { followUser, unfollowUser } from '@/lib/followService';
 import Footer from '@/components/phoneComponents/Footer';
 import { MapPin, UserPlus, UserMinus, MessageCircle } from 'lucide-react';
 import { collection, query, where, orderBy, getDocs, getDoc, doc as firestoreDoc } from 'firebase/firestore';
@@ -296,8 +297,8 @@ const PublicProfilePage = () => {
               <button
                 onClick={handleFollowToggle}
                 className={`flex-1 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${isFollowing
-                    ? 'bg-[#292929] text-white border border-gray-600 hover:bg-[#3a3a3a]'
-                    : 'bg-[#F7CEB0] text-black hover:bg-[#e5bca0]'
+                  ? 'bg-[#292929] text-white border border-gray-600 hover:bg-[#3a3a3a]'
+                  : 'bg-[#F7CEB0] text-black hover:bg-[#e5bca0]'
                   }`}
               >
                 {isFollowing ? (

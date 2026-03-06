@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Key, useRef } from 'react';
 import { Plus, MessageCircle, Heart, Bookmark, Search, MoreHorizontal, X, Send, Share2, Flag, Trash2, Edit, Copy, BookmarkCheck, Home, Calendar, User, Bell, Mail, Settings, LogOut, UserPlus, UserCheck } from 'lucide-react';
-import { subscribeToPosts, addComment, sharePost, reportPost, deletePost, savePost, unsavePost } from '@/lib/postService';
+import { subscribeToPosts, addComment, sharePost, reportPost, deletePost, savePost, unsavePost, togglePostLike } from '@/lib/postService';
 import { followUser as followUserService, unfollowUser as unfollowUserService, getFollowingList } from '@/lib/followService';
 import { getCurrentUserData } from '@/lib/authService';
 import { auth, db } from '@/lib/firebase';
@@ -637,83 +637,51 @@ const Feed = () => {
   const handleLike = async (postId: string) => {
     if (!user?.uid) return;
 
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    const isLiked = post.stats?.likedBy?.includes(user.uid);
+
+    // Optimistic update
+    setPosts(prev => prev.map(p =>
+      p.id === postId
+        ? {
+          ...p,
+          stats: {
+            ...p.stats,
+            likes: isLiked ? p.stats.likes - 1 : p.stats.likes + 1,
+            likedBy: isLiked
+              ? p.stats.likedBy.filter((uid: string) => uid !== user.uid)
+              : [...(p.stats.likedBy || []), user.uid]
+          }
+        }
+        : p
+    ));
+
     try {
-      const post = posts.find(p => p.id === postId);
-      if (!post) return;
-
-      const isLiked = post.stats?.likedBy?.includes(user.uid);
-      const postRef = firestoreDoc(db, 'posts', postId);
-
+      await togglePostLike(
+        postId,
+        user.uid,
+        user.displayName || 'Someone',
+        user.photoURL || ''
+      );
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      // Revert optimistic update on failure
       setPosts(prev => prev.map(p =>
         p.id === postId
           ? {
             ...p,
             stats: {
               ...p.stats,
-              likes: isLiked ? p.stats.likes - 1 : p.stats.likes + 1,
+              likes: isLiked ? p.stats.likes + 1 : p.stats.likes - 1,
               likedBy: isLiked
-                ? p.stats.likedBy.filter((uid: string) => uid !== user.uid)
-                : [...p.stats.likedBy, user.uid]
+                ? [...(p.stats.likedBy || []), user.uid]
+                : p.stats.likedBy.filter((uid: string) => uid !== user.uid)
             }
           }
           : p
       ));
-
-      if (isLiked) {
-        await updateDoc(postRef, {
-          likedBy: arrayRemove(user.uid),
-          likeCount: increment(-1)
-        });
-
-        // Recalculate engagement score
-        const updatedPost = await getDoc(postRef);
-        if (updatedPost.exists()) {
-          const data = updatedPost.data();
-          const { calculateEngagementScore } = await import('@/lib/engagementService');
-          const newScore = calculateEngagementScore(
-            data.likeCount || 0,
-            data.commentCount || 0,
-            data.shareCount || 0
-          );
-          await updateDoc(postRef, { engagementScore: newScore });
-        }
-      } else {
-        await updateDoc(postRef, {
-          likedBy: arrayUnion(user.uid),
-          likeCount: increment(1)
-        });
-
-        // Recalculate engagement score
-        const updatedPost = await getDoc(postRef);
-        if (updatedPost.exists()) {
-          const data = updatedPost.data();
-          const { calculateEngagementScore } = await import('@/lib/engagementService');
-          const newScore = calculateEngagementScore(
-            data.likeCount || 0,
-            data.commentCount || 0,
-            data.shareCount || 0
-          );
-          await updateDoc(postRef, { engagementScore: newScore });
-        }
-      }
-    } catch (error) {
-      console.error('Error toggling like:', error);
-      const postDoc = await getDoc(firestoreDoc(db, 'posts', postId));
-      if (postDoc.exists()) {
-        const data = postDoc.data();
-        setPosts(prev => prev.map(p =>
-          p.id === postId
-            ? {
-              ...p,
-              stats: {
-                ...p.stats,
-                likes: data.likeCount || 0,
-                likedBy: data.likedBy || []
-              }
-            }
-            : p
-        ));
-      }
     }
   };
 
@@ -1298,6 +1266,10 @@ const Feed = () => {
             setSelectedPostForEdit(selectedPostForMenu);
             setSelectedPostForMenu(null);
             setMenuAnchorRef(null);
+          }}
+          onShareClick={() => {
+            setSelectedPostForShare(selectedPostForMenu);
+            setSelectedPostForMenu(null);
           }}
         />
       )}
@@ -2166,6 +2138,10 @@ const MobileFeedPage = () => {
           }}
           onEdit={() => {
             setSelectedPostForEdit(selectedPostForMenu);
+            setSelectedPostForMenu(null);
+          }}
+          onShareClick={() => {
+            setSelectedPostForShare(selectedPostForMenu);
             setSelectedPostForMenu(null);
           }}
         />

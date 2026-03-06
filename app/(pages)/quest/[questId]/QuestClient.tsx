@@ -834,7 +834,7 @@ const QuestClient = () => {
 
   const handleCommentNavigate = () => {
     if (quest?.associatedPostId) {
-      router.push(`/feed?scrollTo=${quest.associatedPostId}&openComments=true`);
+      router.push(`/post/${quest.associatedPostId}`);
     }
   };
 
