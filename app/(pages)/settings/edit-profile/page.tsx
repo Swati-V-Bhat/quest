@@ -264,14 +264,19 @@ const EditProfilePage = () => {
   const containerStartExpression = `calc((100vw - (${QUEST_LEFT_NAV_WIDTH}px + ${QUEST_DESKTOP_MAIN_WIDTH}vw + ${QUEST_SIDEBAR_GAP}px)) / 2)`;
   const mainLeftExpression = `calc(${containerStartExpression} + ${QUEST_LEFT_NAV_WIDTH + QUEST_SIDEBAR_GAP}px)`;
 
-  const mainWidthStyle: React.CSSProperties = {
-    width: `${QUEST_DESKTOP_MAIN_WIDTH}vw`,
-    marginLeft: mainLeftExpression,
-    marginRight: 'auto',
-  };
+  const layoutStyles = `
+    @media (min-width: 1024px) {
+      .edit-profile-main {
+        width: ${QUEST_DESKTOP_MAIN_WIDTH}vw;
+        margin-left: ${mainLeftExpression};
+        margin-right: auto;
+      }
+    }
+  `;
 
   return (
     <div className='min-h-screen bg-black'>
+      <style>{layoutStyles}</style>
       {/* Desktop Navbar */}
       <div className="hidden lg:block">
         <NavBar
@@ -285,9 +290,9 @@ const EditProfilePage = () => {
         />
       </div>
 
-      {/* Desktop Main Content */}
-      <div className='hidden lg:block' style={mainWidthStyle}>
-        <div className='w-full max-w-[65vw]'>
+      {/* Main Content */}
+      <div className='edit-profile-main lg:relative'>
+        <div className='w-full lg:max-w-none'>
 
           {/* Header */}
           <div className='sticky top-0 z-10 bg-[#121212] border-b border-gray-700'>

@@ -108,6 +108,7 @@ const AccountPage = () => {
 
   // Posts state
   const [yourPosts, setYourPosts] = useState<Post[]>([]);
+  const [questPosts, setQuestPosts] = useState<Post[]>([]);
   const [savedPosts, setSavedPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
 
@@ -138,14 +139,21 @@ const AccountPage = () => {
       userName: quest.userName || userData?.displayName || 'User',
       userProfilePic: quest.userProfilePic || userData?.photoURL || '/default-avatar.png',
       createdAt: quest.createdAt,
-      likeCount: quest.stats?.likes || 0,
-      commentCount: quest.stats?.comments || 0,
+      likeCount: quest.likesCount || 0,
+      commentCount: quest.commentsCount || 0,
       likedBy: quest.likedBy || [],
       postType: 'quest_completion',
       text: quest.description || '',
       photoUrl: quest.coverImageUrl || '',
       uid: quest.owner || '',
-      authorId: quest.owner || ''
+      authorId: quest.owner || '',
+      questContext: {
+        questId: quest.id,
+        questTitle: quest.title || quest.destination || 'Untitled Quest',
+        description: quest.description || '',
+        type: quest.type,
+        isAiGenerated: quest.isAiGenerated
+      }
     };
   };
 
@@ -256,10 +264,12 @@ const AccountPage = () => {
         };
       });
 
-      // Filter out quest_completion posts - they should only appear in Quests section
+      // Separate normal posts and quest completion posts
       const normalPosts = posts.filter(post => post.postType !== 'quest_completion');
+      const qPosts = posts.filter(post => post.postType === 'quest_completion');
 
       setYourPosts(normalPosts);
+      setQuestPosts(qPosts);
     } catch (error) {
       console.error('Error fetching user posts:', error);
     } finally {
@@ -366,6 +376,7 @@ const AccountPage = () => {
         );
 
       setYourPosts(updatePosts);
+      setQuestPosts(updatePosts);
       setSavedPosts(updatePosts);
     } catch (error) {
       console.error('Error liking post:', error);
@@ -385,6 +396,7 @@ const AccountPage = () => {
           post.id === postId ? { ...post, isSaved: !isSaved } : post
         );
       setYourPosts(updatePosts);
+      setQuestPosts(updatePosts);
       setSavedPosts(updatePosts);
     } catch (error) {
       console.error('Error saving post:', error);
@@ -687,18 +699,24 @@ const AccountPage = () => {
                           </div>
                         ) : (
                           <>
-                            {myQuests.slice(0, visibleQuestsCount).map(quest => (
-                              <MobileQuestPostCard
-                                key={quest.id}
-                                post={formatQuestAsPost(quest) as any}
-                                currentUser={user}
-                                onLike={() => { }}
-                                onSave={() => { }}
-                                onMenu={() => { }}
-                                onShare={() => setSelectedPostForShare(formatQuestAsPost(quest) as any)}
-                                onComment={() => navigateTo(`/quest/${quest.id}`)}
-                              />
-                            ))}
+                            {myQuests.slice(0, visibleQuestsCount).map(quest => {
+                              // Prioritize actual post if it exists in questPosts
+                              const actualPost = questPosts.find(p => p.questContext?.questId === quest.id || p.id === quest.associatedPostId);
+                              const postToRender = actualPost || formatQuestAsPost(quest);
+                              
+                              return (
+                                <MobileQuestPostCard
+                                  key={quest.id}
+                                  post={postToRender as any}
+                                  currentUser={user}
+                                  onLike={() => handleLike(postToRender.id)}
+                                  onSave={() => handleSave(postToRender.id, postToRender.isSaved || false)}
+                                  onMenu={() => setSelectedPostForMenu(postToRender as any)}
+                                  onShare={() => setSelectedPostForShare(postToRender as any)}
+                                  onComment={() => navigateTo(`/post/${postToRender.id}`)}
+                                />
+                              );
+                            })}
                             {myQuests.length > visibleQuestsCount && (
                               <button
                                 onClick={() => setVisibleQuestsCount(prev => prev + 5)}
@@ -782,11 +800,11 @@ const AccountPage = () => {
                                     key={`saved-quest-${item.id}`}
                                     post={item}
                                     currentUser={user}
-                                    onLike={() => { }}
-                                    onSave={() => { }}
-                                    onMenu={() => { }}
+                                    onLike={() => handleLike(item.id)}
+                                    onSave={() => handleSave(item.id, true)}
+                                    onMenu={() => setSelectedPostForMenu(item)}
                                     onShare={() => setSelectedPostForShare(item)}
-                                    onComment={() => navigateTo(`/quest/${item.id}`)}
+                                    onComment={() => navigateTo(`/post/${item.id}`)}
                                   />
                                 ) : (
                                   <MobilePostCard
