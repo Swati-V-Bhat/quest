@@ -1348,7 +1348,8 @@ const MobilePostCard = ({
         <MobileQuestPostCard
           post={{
             id: post.id,
-            uid: post.uid,
+            uid: post.uid || post.authorId,
+            authorId: post.authorId || post.uid,
             userName: post.userName,
             userProfilePic: post.userProfilePic,
             text: post.text || '',

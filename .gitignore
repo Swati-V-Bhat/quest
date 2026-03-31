@@ -44,3 +44,36 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 serviceAccountKey.json
+
+# IDE
+.vscode/
+
+# Local/Temp Files
+.remotion-temp/
+.~lock.*
+*.mp4
+videos/
+public/localhost_*.png
+*.csv
+
+# Firebase/GCP Credentials & Backups
+*serviceAccountKey*.json
+project-*-firebase-adminsdk-*.json
+firestore_backup.json
+users.json
+
+# Local scripts
+check_comments.js
+check_query.js
+exportFirestore.js
+export_subcollection_comments.js
+importAuth.js
+importFirestore.js
+import_comments.js
+migrate_storage.js
+test_bucket_access.js
+update_db_links.js
+lib/migrate-user-qp-fields.js
+
+# Functions node_modules
+functions/node_modules/

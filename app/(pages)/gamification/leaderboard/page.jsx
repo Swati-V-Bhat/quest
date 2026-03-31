@@ -3,10 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, getDoc, doc as firestoreDoc } from 'firebase/firestore';
 import { getUserKudosLeaderboard } from '@/lib/kudosService';
 import { ArrowLeft, Trophy, Crown, Medal, Star, TrendingUp, Flame } from 'lucide-react';
-// import { RankBadge } from '@/components/gamification/RankComponents';
+// // import { RankBadge } from '@/components/gamification/RankComponents';
 import NavBar from '@/components/LeftSideNav';
 import Footer from '@/components/phoneComponents/Footer';
 
@@ -66,9 +66,9 @@ const LeaderboardPage = () => {
     return await Promise.all(
       snapshot.docs.map(async (doc) => {
         const data = doc.data();
-        // Get user profile data
-        const userDoc = await getDocs(query(collection(db, 'users'), limit(1)));
-        const userData = userDoc.docs.find(d => d.id === doc.id)?.data();
+        // Fetch user profile by exact UID
+        const userDoc = await getDoc(firestoreDoc(db, 'users', doc.id));
+        const userData = userDoc.exists() ? userDoc.data() : null;
 
         return {
           uid: doc.id,
@@ -90,8 +90,8 @@ const LeaderboardPage = () => {
     return await Promise.all(
       snapshot.docs.map(async (doc) => {
         const data = doc.data();
-        const userDoc = await getDocs(query(collection(db, 'users'), limit(1)));
-        const userData = userDoc.docs.find(d => d.id === doc.id)?.data();
+        const userDoc = await getDoc(firestoreDoc(db, 'users', doc.id));
+        const userData = userDoc.exists() ? userDoc.data() : null;
 
         return {
           uid: doc.id,
@@ -113,8 +113,8 @@ const LeaderboardPage = () => {
     const data = await Promise.all(
       snapshot.docs.map(async (doc) => {
         const data = doc.data();
-        const userDoc = await getDocs(query(collection(db, 'users'), limit(1)));
-        const userData = userDoc.docs.find(d => d.id === doc.id)?.data();
+        const userDoc = await getDoc(firestoreDoc(db, 'users', doc.id));
+        const userData = userDoc.exists() ? userDoc.data() : null;
 
         return {
           uid: doc.id,

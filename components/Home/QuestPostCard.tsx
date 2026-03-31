@@ -9,7 +9,8 @@ import { FaPlus, FaHeart, FaRegCommentDots, FaShareSquare, FaBookmark, FaRegBook
 interface QuestPostCardProps {
   post: {
     id: string;
-    uid: string;
+    authorId?: string;
+    uid?: string;
     userName: string;
     userProfilePic: string;
     text: string; // Quest description
@@ -55,9 +56,9 @@ export const QuestPostCard = ({
   const isLiked = post.likedBy?.includes(currentUser?.uid);
 
   // 🔥 FOLLOW FUNCTIONALITY
-  const authorId = post.uid;
-  const isFollowingUser = followingList?.includes(authorId) || false;
-  const isOwnPost = currentUser?.uid === authorId;
+  const computedAuthorId = post.authorId || post.uid;
+  const isFollowingUser = followingList?.includes(computedAuthorId || '') || false;
+  const isOwnPost = currentUser?.uid === computedAuthorId;
 
   const handleQuestClick = () => {
     if (post.questContext?.questId) {
@@ -69,12 +70,12 @@ export const QuestPostCard = ({
     e.stopPropagation();
     e.preventDefault();
 
-    if (!currentUser?.uid || !authorId || authorId === currentUser.uid) {
+    if (!currentUser?.uid || !computedAuthorId || computedAuthorId === currentUser.uid) {
       return;
     }
 
     if (onFollow) {
-      onFollow(authorId);
+      onFollow(computedAuthorId);
     }
   };
 
@@ -100,13 +101,13 @@ export const QuestPostCard = ({
             src={post.userProfilePic || '/default-avatar.png'}
             alt={post.userName}
             className="w-10 h-10 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => router.push(`/profile/${authorId}`)}
+            onClick={() => router.push(`/profile/${computedAuthorId}`)}
           />
           <div className="flex-1">
             <div className="flex items-baseline gap-2">
               <h3
                 className="text-white font-medium text-sm cursor-pointer hover:underline"
-                onClick={() => router.push(`/profile/${authorId}`)}
+                onClick={() => router.push(`/profile/${computedAuthorId}`)}
               >
                 @{post.username || post.userName.toLowerCase().replace(/\s+/g, '')}
               </h3>
@@ -299,9 +300,9 @@ export const MobileQuestPostCard = ({
   const isLiked = post.likedBy?.includes(currentUser?.uid);
 
   // 🔥 FOLLOW FUNCTIONALITY
-  const authorId = post.uid;
-  const isFollowingUser = followingList?.includes(authorId) || false;
-  const isOwnPost = currentUser?.uid === authorId;
+  const computedAuthorId = post.authorId || post.uid;
+  const isFollowingUser = followingList?.includes(computedAuthorId || '') || false;
+  const isOwnPost = currentUser?.uid === computedAuthorId;
 
   const handleQuestClick = () => {
     if (post.questContext?.questId) {
@@ -313,12 +314,12 @@ export const MobileQuestPostCard = ({
     e.stopPropagation();
     e.preventDefault();
 
-    if (!currentUser?.uid || !authorId || authorId === currentUser.uid) {
+    if (!currentUser?.uid || !computedAuthorId || computedAuthorId === currentUser.uid) {
       return;
     }
 
     if (onFollow) {
-      onFollow(authorId);
+      onFollow(computedAuthorId);
     }
   };
 
@@ -343,13 +344,13 @@ export const MobileQuestPostCard = ({
             src={post.userProfilePic || '/default-avatar.png'}
             alt={post.userName}
             className="w-8 h-8 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
-            onClick={() => router.push(`/profile/${authorId}`)}
+            onClick={() => router.push(`/profile/${computedAuthorId}`)}
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline gap-2 truncate">
               <span
                 className="text-white font-medium text-sm cursor-pointer hover:underline truncate block"
-                onClick={() => router.push(`/profile/${authorId}`)}
+                onClick={() => router.push(`/profile/${computedAuthorId}`)}
               >
                 @{post.username || post.userName.toLowerCase().replace(/\s+/g, '')}
               </span>

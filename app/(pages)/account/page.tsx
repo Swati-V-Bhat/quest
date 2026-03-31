@@ -51,6 +51,13 @@ import {
   getFollowingList,
 } from '@/lib/followService';
 
+// Feed components for interactive posts/quests
+import MobilePostCard from '@/components/Home/MobilePostCard';
+import { MobileQuestPostCard } from '@/components/Home/QuestPostCard';
+import ShareModal from '@/components/Home/ShareModal';
+import MobilePostMenu from '@/components/Home/PostMenu';
+import EditPostModal from '@/components/Home/EditPostModal';
+
 const DESKTOP_MAIN_WIDTH = 60; // percentage of viewport width used for main content
 const LEFT_NAV_WIDTH = 280;
 const SIDEBAR_GAP = 5;
@@ -91,6 +98,7 @@ interface Badge {
 interface Post {
   id: string;
   uid: string;
+  authorId: string;
   userName: string;
   userProfilePic: string;
   text: string;
@@ -117,17 +125,47 @@ const AccountPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Posts state
-  const [activePostTab, setActivePostTab] = useState<'your-posts' | 'saved-posts'>('your-posts');
   const [yourPosts, setYourPosts] = useState<Post[]>([]);
   const [savedPosts, setSavedPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
 
   // Quests state
-  const [activeQuestTab, setActiveQuestTab] = useState<'public-quests' | 'private-quests' | 'saved-quests'>('public-quests');
   const [myQuests, setMyQuests] = useState<Quest[]>([]);
   const [savedQuests, setSavedQuests] = useState<Quest[]>([]);
   const [loadingQuests, setLoadingQuests] = useState(false);
   const [followingList, setFollowingList] = useState<string[]>([]);
+
+  // Interactive Modal States
+  const [selectedPostForMenu, setSelectedPostForMenu] = useState<Post | null>(null);
+  const [selectedPostForShare, setSelectedPostForShare] = useState<Post | null>(null);
+  const [selectedPostForEdit, setSelectedPostForEdit] = useState<Post | null>(null);
+
+  // New main tab state (Instagram style)
+  const [activeMainTab, setActiveMainTab] = useState<'quests' | 'posts' | 'saved'>('quests');
+  
+  // View More state limiters
+  const [visibleQuestsCount, setVisibleQuestsCount] = useState(5);
+  const [visiblePostsCount, setVisiblePostsCount] = useState(5);
+  const [visibleSavedCount, setVisibleSavedCount] = useState(5);
+
+  const formatQuestAsPost = (quest: any) => {
+    return {
+      ...quest,
+      id: quest.id,
+      questData: quest,
+      userName: quest.userName || userData?.displayName || 'User',
+      userProfilePic: quest.userProfilePic || userData?.photoURL || '/default-avatar.png',
+      createdAt: quest.createdAt,
+      likeCount: quest.stats?.likes || 0,
+      commentCount: quest.stats?.comments || 0,
+      likedBy: quest.likedBy || [],
+      postType: 'quest_completion',
+      text: quest.description || '',
+      photoUrl: quest.coverImageUrl || '',
+      uid: quest.owner || '',
+      authorId: quest.owner || ''
+    };
+  };
 
   // Effect 1: Load critical profile data first (shows page immediately)
   useEffect(() => {
@@ -218,6 +256,7 @@ const AccountPage = () => {
         return {
           id: doc.id,
           uid: data.uid || uid,
+          authorId: data.authorId || data.uid || uid,
           userName: data.userName || userData?.displayName || 'User',
           userProfilePic: data.userProfilePic || userData?.photoURL || '/default-avatar.png',
           text: data.text || '',
@@ -258,6 +297,7 @@ const AccountPage = () => {
           posts.push({
             id: postDoc.id,
             uid: data.uid || '',
+            authorId: data.authorId || data.uid || '',
             userName: data.userName || 'User',
             userProfilePic: data.userProfilePic || '/default-avatar.png',
             text: data.text || '',
@@ -544,7 +584,7 @@ const AccountPage = () => {
               {gamificationInfo && (
                 <div
                   className='mt-6 bg-[#1a1a1a] rounded-xl p-5 cursor-pointer hover:bg-[#292929] transition-colors border border-gray-800'
-                  onClick={() => navigateTo('/gamification')}
+                  onClick={() => navigateTo('/gamification/leaderboard')}
                 >
                   <div className='flex items-center justify-between mb-4'>
                     <div className='flex items-center gap-3'>
@@ -623,195 +663,177 @@ const AccountPage = () => {
             </div>
           </div>
 
-          {/* Content */}
-          <div className='mt-8 px-5 lg:px-8 pb-20 lg:pb-8'>
-            {/* Quests Section */}
-            <div className='bg-[#1a1a1a] rounded-xl p-5 lg:p-6 mb-6'>
-              <div className='flex items-center justify-between mb-4'>
-                <h2 className='text-2xl font-bold text-white'>Quests</h2>
+          {/* Main Tabs Navigation */}
+          <div className='px-5 lg:px-8 mt-6'>
+            <div className='flex gap-4 border-b border-gray-800 overflow-x-auto scrollbar-hide'>
+              {['quests', 'posts', 'saved'].map(tab => (
                 <button
-                  onClick={() => navigateTo('/account/all-quests')}
-                  className='text-[#EA6100] text-sm font-medium hover:underline'
+                  key={tab}
+                  onClick={() => setActiveMainTab(tab as any)}
+                  className={`py-3 px-1 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
+                    activeMainTab === tab
+                      ? 'border-[#EA6100] text-white'
+                      : 'border-transparent text-gray-500 hover:text-gray-300'
+                  }`}
                 >
-                  View All
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
-              </div>
+              ))}
+            </div>
+          </div>
 
-              <div className='flex gap-3 mb-6 overflow-x-auto scrollbar-hide'>
-                <button
-                  onClick={() => setActiveQuestTab('public-quests')}
-                  className={`py-2 px-4 rounded-lg font-medium transition-colors whitespace-nowrap ${activeQuestTab === 'public-quests'
-                    ? 'bg-[#EA6100] text-black'
-                    : 'bg-[#292929] text-gray-400 hover:bg-[#3a3a3a]'
-                    }`}
-                >
-                  Public
-                </button>
-                <button
-                  onClick={() => setActiveQuestTab('private-quests')}
-                  className={`py-2 px-4 rounded-lg font-medium transition-colors whitespace-nowrap ${activeQuestTab === 'private-quests'
-                    ? 'bg-[#EA6100] text-black'
-                    : 'bg-[#292929] text-gray-400 hover:bg-[#3a3a3a]'
-                    }`}
-                >
-                  Private
-                </button>
-                <button
-                  onClick={() => setActiveQuestTab('saved-quests')}
-                  className={`py-2 px-4 rounded-lg font-medium transition-colors whitespace-nowrap ${activeQuestTab === 'saved-quests'
-                    ? 'bg-[#EA6100] text-black'
-                    : 'bg-[#292929] text-gray-400 hover:bg-[#3a3a3a]'
-                    }`}
-                >
-                  Saved Quests
-                </button>
-              </div>
-
-              {loadingQuests ? (
-                <div className='text-center py-8'>
-                  <div className='text-gray-400'>Loading quests...</div>
-                </div>
-              ) : (
-                <div className='flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x'>
-                  {(activeQuestTab === 'public-quests'
-                    ? myQuests.filter((q) => q.isPublic)
-                    : activeQuestTab === 'private-quests'
-                      ? myQuests.filter((q) => !q.isPublic)
-                      : savedQuests
-                  ).slice(0, 5).map((quest) => (
-                    <div key={quest.id} className='min-w-[280px] w-[280px] snap-start'>
-                      <QuestCard
-                        quest={quest}
-                        onClick={() => navigateTo(`/quest/${quest.id}`)}
-                      />
-                    </div>
-                  ))}
-                  {(activeQuestTab === 'public-quests'
-                    ? myQuests.filter((q) => q.isPublic)
-                    : activeQuestTab === 'private-quests'
-                      ? myQuests.filter((q) => !q.isPublic)
-                      : savedQuests
-                  ).length === 0 && (
-                      <div className='w-full text-center py-8 bg-[#292929] rounded-lg'>
-                        <p className='text-gray-400'>No quests found</p>
-                        {activeQuestTab !== 'saved-quests' && (
-                          <button
-                            onClick={() => navigateTo('/quest/create')}
-                            className='mt-3 bg-[#EA6100] text-black px-6 py-2 rounded-lg font-medium hover:bg-[#f5c094] transition-colors'
-                          >
-                            Create Quest
-                          </button>
+          <div className='mt-6 px-5 lg:px-8 pb-20 lg:pb-8'>
+            <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+              {/* Left Column - Main Content (Vertical List) */}
+              <div className='lg:col-span-2 space-y-6'>
+                {/* Quests Tab */}
+                {activeMainTab === 'quests' && (
+                  <div>
+                    {loadingQuests ? (
+                      <div className='text-center py-8 text-gray-400'>Loading quests...</div>
+                    ) : (
+                      <div className='flex flex-col gap-4'>
+                        {myQuests.length === 0 ? (
+                          <div className='text-center py-12 bg-[#1a1a1a] rounded-xl border border-gray-800'>
+                            <p className='text-gray-400'>No quests found</p>
+                            <button
+                              onClick={() => navigateTo('/quest/create')}
+                              className='mt-4 bg-[#EA6100] text-black px-6 py-2 rounded-lg font-medium hover:bg-[#f5c094] transition-colors'
+                            >
+                              Create Quest
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            {myQuests.slice(0, visibleQuestsCount).map(quest => (
+                              <MobileQuestPostCard
+                                key={quest.id}
+                                post={formatQuestAsPost(quest) as any}
+                                currentUser={user}
+                                onLike={() => { }}
+                                onSave={() => { }}
+                                onMenu={() => { }}
+                                onShare={() => setSelectedPostForShare(formatQuestAsPost(quest) as any)}
+                                onComment={() => navigateTo(`/quest/${quest.id}`)}
+                              />
+                            ))}
+                            {myQuests.length > visibleQuestsCount && (
+                              <button
+                                onClick={() => setVisibleQuestsCount(prev => prev + 5)}
+                                className="w-full py-3 mt-2 text-center text-[#EA6100] font-medium bg-[#1a1a1a] rounded-lg border border-gray-800 hover:bg-[#292929] transition-colors"
+                              >
+                                View More
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     )}
-                  {(activeQuestTab === 'public-quests'
-                    ? myQuests.filter((q) => q.isPublic)
-                    : activeQuestTab === 'private-quests'
-                      ? myQuests.filter((q) => !q.isPublic)
-                      : savedQuests
-                  ).length > 5 && (
-                      <div className='min-w-[150px] flex items-center justify-center'>
-                        <button
-                          onClick={() => navigateTo('/account/quests')}
-                          className='flex flex-col items-center gap-2 text-gray-400 hover:text-[#EA6100] transition-colors'
-                        >
-                          <div className='w-12 h-12 rounded-full bg-[#292929] flex items-center justify-center'>
-                            <IoChevronForward size={24} />
-                          </div>
-                          <span className='font-medium'>View All</span>
-                        </button>
-                      </div>
-                    )}
-                </div>
-              )}
-            </div>
-
-            <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-
-              {/* Left Column - Posts */}
-              <div className='lg:col-span-2 space-y-6 '>
-                {/* Posts Section */}
-                <div className='bg-[#1a1a1a] rounded-xl p-5 lg:p-6'>
-                  <div className='flex items-center justify-between mb-4'>
-                    <h2 className='text-2xl font-bold text-white'>Posts</h2>
-                    <button
-                      onClick={() => navigateTo('/account/posts')}
-                      className='text-[#EA6100] text-sm font-medium hover:underline'
-                    >
-                      View All
-                    </button>
                   </div>
+                )}
 
-                  <div className='flex gap-3 mb-6 overflow-x-auto scrollbar-hide'>
-                    <button
-                      onClick={() => setActivePostTab('your-posts')}
-                      className={`py-2 px-4 rounded-lg font-medium transition-colors whitespace-nowrap ${activePostTab === 'your-posts'
-                        ? 'bg-[#EA6100] text-black'
-                        : 'bg-[#292929] text-gray-400 hover:bg-[#3a3a3a]'
-                        }`}
-                    >
-                      Your Posts ({yourPosts.length})
-                    </button>
-                    <button
-                      onClick={() => setActivePostTab('saved-posts')}
-                      className={`py-2 px-4 rounded-lg font-medium transition-colors whitespace-nowrap ${activePostTab === 'saved-posts'
-                        ? 'bg-[#EA6100] text-black'
-                        : 'bg-[#292929] text-gray-400 hover:bg-[#3a3a3a]'
-                        }`}
-                    >
-                      Saved Posts ({savedPosts.length})
-                    </button>
-                  </div>
-
-                  {loadingPosts ? (
-                    <div className='text-center py-8'>
-                      <div className='text-gray-400'>Loading posts...</div>
-                    </div>
-                  ) : (
-                    <div className='flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x'>
-                      {(activePostTab === 'your-posts' ? yourPosts : savedPosts).slice(0, 5).map((post) => (
-                        <div key={post.id} className='min-w-[300px] w-[300px] snap-start'>
-                          <PostCard
-                            post={post}
-                            currentUser={user}
-                            onLike={() => handleLike(post.id)}
-                            onSave={() => handleSave(post.id, post.isSaved || false)}
-                            onClick={() => navigateTo(`/post/${post.id}`)}
-                          />
-                        </div>
-                      ))}
-                      {(activePostTab === 'your-posts' ? yourPosts : savedPosts).length === 0 && (
-                        <div className='w-full text-center py-8 bg-[#292929] rounded-lg'>
-                          <p className='text-gray-400'>No posts yet</p>
-                          {activePostTab === 'your-posts' && (
+                {/* Posts Tab */}
+                {activeMainTab === 'posts' && (
+                  <div>
+                    {loadingPosts ? (
+                      <div className='text-center py-8 text-gray-400'>Loading posts...</div>
+                    ) : (
+                      <div className='flex flex-col gap-4'>
+                        {yourPosts.length === 0 ? (
+                          <div className='text-center py-12 bg-[#1a1a1a] rounded-xl border border-gray-800'>
+                            <p className='text-gray-400'>No posts yet</p>
                             <button
                               onClick={() => navigateTo('/create-post')}
-                              className='mt-3 bg-[#EA6100] text-black px-6 py-2 rounded-lg font-medium hover:bg-[#f5c094] transition-colors'
+                              className='mt-4 bg-[#EA6100] text-black px-6 py-2 rounded-lg font-medium hover:bg-[#f5c094] transition-colors'
                             >
                               Create Your First Post
                             </button>
-                          )}
-                        </div>
-                      )}
-                      {(activePostTab === 'your-posts' ? yourPosts : savedPosts).length > 5 && (
-                        <div className='min-w-[150px] flex items-center justify-center'>
-                          <button
-                            onClick={() => navigateTo('/account/posts')}
-                            className='flex flex-col items-center gap-2 text-gray-400 hover:text-[#EA6100] transition-colors'
-                          >
-                            <div className='w-12 h-12 rounded-full bg-[#292929] flex items-center justify-center'>
-                              <IoChevronForward size={24} />
-                            </div>
-                            <span className='font-medium'>View All</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                          </div>
+                        ) : (
+                          <>
+                            {yourPosts.slice(0, visiblePostsCount).map(post => (
+                              <MobilePostCard
+                                key={post.id}
+                                post={post}
+                                currentUser={user}
+                                onLike={() => handleLike(post.id)}
+                                onSave={() => handleSave(post.id, post.isSaved || false)}
+                                onComment={() => navigateTo(`/post/${post.id}`)}
+                                onShare={() => setSelectedPostForShare(post)}
+                                onMenuClick={() => setSelectedPostForMenu(post)}
+                              />
+                            ))}
+                            {yourPosts.length > visiblePostsCount && (
+                              <button
+                                onClick={() => setVisiblePostsCount(prev => prev + 5)}
+                                className="w-full py-3 mt-2 text-center text-[#EA6100] font-medium bg-[#1a1a1a] rounded-lg border border-gray-800 hover:bg-[#292929] transition-colors"
+                              >
+                                View More
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                </div>
-
-
+                {/* Saved Tab */}
+                {activeMainTab === 'saved' && (
+                  <div>
+                    {loadingPosts || loadingQuests ? (
+                      <div className='text-center py-8 text-gray-400'>Loading saved items...</div>
+                    ) : (
+                      <div className='flex flex-col gap-4'>
+                        {savedPosts.length === 0 && savedQuests.length === 0 ? (
+                          <div className='text-center py-12 bg-[#1a1a1a] rounded-xl border border-gray-800'>
+                            <p className='text-gray-400'>Nothing saved yet</p>
+                          </div>
+                        ) : (
+                          <>
+                            {[...savedQuests.map(q => formatQuestAsPost(q)), ...savedPosts]
+                              .sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis())
+                              .slice(0, visibleSavedCount)
+                              .map((item: any) => (
+                                item.postType === 'quest_completion' ? (
+                                  <MobileQuestPostCard
+                                    key={`saved-quest-${item.id}`}
+                                    post={item}
+                                    currentUser={user}
+                                    onLike={() => { }}
+                                    onSave={() => { }}
+                                    onMenu={() => { }}
+                                    onShare={() => setSelectedPostForShare(item)}
+                                    onComment={() => navigateTo(`/quest/${item.id}`)}
+                                  />
+                                ) : (
+                                  <MobilePostCard
+                                    key={`saved-post-${item.id}`}
+                                    post={item}
+                                    currentUser={user}
+                                    onLike={() => handleLike(item.id)}
+                                    onSave={() => handleSave(item.id, true)}
+                                    onComment={() => navigateTo(`/post/${item.id}`)}
+                                    onShare={() => setSelectedPostForShare(item)}
+                                    onMenuClick={() => setSelectedPostForMenu(item)}
+                                  />
+                                )
+                              ))}
+                            
+                            {(savedQuests.length + savedPosts.length) > visibleSavedCount && (
+                              <button
+                                onClick={() => setVisibleSavedCount(prev => prev + 5)}
+                                className="w-full py-3 mt-2 text-center text-[#EA6100] font-medium bg-[#1a1a1a] rounded-lg border border-gray-800 hover:bg-[#292929] transition-colors"
+                              >
+                                View More
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Right Column - Quick Actions (Desktop Only) */}
@@ -863,6 +885,47 @@ const AccountPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Modals for Interactive Cards */}
+      {selectedPostForMenu && (
+        <MobilePostMenu
+          post={selectedPostForMenu as any}
+          user={user}
+          onClose={() => setSelectedPostForMenu(null)}
+          onDelete={() => {
+            setYourPosts(prev => prev.filter(p => p.id !== selectedPostForMenu.id));
+            setSavedPosts(prev => prev.filter(p => p.id !== selectedPostForMenu.id));
+            setSelectedPostForMenu(null);
+          }}
+          onEdit={() => {
+            setSelectedPostForEdit(selectedPostForMenu);
+            setSelectedPostForMenu(null);
+          }}
+          onShareClick={() => {
+            setSelectedPostForShare(selectedPostForMenu);
+            setSelectedPostForMenu(null);
+          }}
+        />
+      )}
+
+      {selectedPostForShare && (
+        <ShareModal
+          post={selectedPostForShare as any}
+          onClose={() => setSelectedPostForShare(null)}
+        />
+      )}
+
+      {selectedPostForEdit && user && (
+        <EditPostModal
+          user={user}
+          onClose={() => setSelectedPostForEdit(null)}
+          post={selectedPostForEdit as any}
+          onPostUpdated={async (updatedPost) => {
+            setYourPosts(prev => prev.map(p => p.id === updatedPost.id ? { ...p, ...updatedPost } : p));
+            setSavedPosts(prev => prev.map(p => p.id === updatedPost.id ? { ...p, ...updatedPost } : p));
+          }}
+        />
+      )}
     </div>
   );
 };
@@ -889,194 +952,6 @@ const MenuOption: React.FC<{
   </div>
 );
 
-// Post Card Component with Read More
-const PostCard: React.FC<{
-  post: Post;
-  currentUser: any;
-  onLike: () => void;
-  onSave: () => void;
-  onClick: () => void;
-}> = ({ post, currentUser, onLike, onSave, onClick }) => {
-  const [liked, setLiked] = useState(
-    post.likedBy?.includes(currentUser?.uid) || false
-  );
-  const [showFullText, setShowFullText] = useState(false);
 
-  useEffect(() => {
-    setLiked(post.likedBy?.includes(currentUser?.uid) || false);
-  }, [post.likedBy, currentUser?.uid]);
-
-  const formatTime = (timestamp: any) => {
-    if (!timestamp) return '';
-    const date = timestamp.toDate
-      ? timestamp.toDate()
-      : new Date(timestamp.seconds * 1000);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800)
-      return `${Math.floor(diffInSeconds / 86400)}d ago`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-
-  const handleLikeClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onLike();
-  };
-
-  const handleSaveClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onSave();
-  };
-
-  const textLimit = 150;
-  const needsReadMore = post.text.length > textLimit;
-
-  return (
-    <div className='bg-[#292929] rounded-xl overflow-hidden hover:bg-[#3a3a3a] transition-colors border border-gray-800'>
-      <div className='flex items-center justify-between p-4 border-b border-gray-800'>
-        <div
-          className='flex items-center gap-3 cursor-pointer'
-          onClick={onClick}
-        >
-          <img
-            src={post.userProfilePic || '/default-avatar.png'}
-            alt={post.userName}
-            className='w-10 h-10 rounded-full object-cover'
-          />
-          <div>
-            <span className='text-white font-medium block'>{post.userName}</span>
-            <span className='text-gray-400 text-sm'>
-              {formatTime(post.createdAt)}
-            </span>
-          </div>
-        </div>
-        <button
-          className='text-gray-400 hover:text-white'
-          onClick={(e) => e.stopPropagation()}
-        >
-          <MoreHorizontal size={20} />
-        </button>
-      </div>
-
-      {post.photoUrl && (
-        <div
-          className='relative w-full aspect-square cursor-pointer'
-          onClick={onClick}
-        >
-          <img
-            src={Array.isArray(post.photoUrl) ? post.photoUrl[0] : post.photoUrl}
-            alt='Post'
-            className='w-full h-full object-cover'
-          />
-        </div>
-      )}
-
-      <div className='p-4'>
-        <div className='mb-3'>
-          <p className='text-white'>
-            {needsReadMore && !showFullText
-              ? `${post.text.slice(0, textLimit)}...`
-              : post.text}
-          </p>
-          {needsReadMore && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowFullText(!showFullText);
-              }}
-              className='text-[#EA6100] text-sm mt-1 hover:underline'
-            >
-              {showFullText ? 'Show less' : 'Read more'}
-            </button>
-          )}
-        </div>
-
-        <div className='flex items-center justify-between pt-3 border-t border-gray-800'>
-          <div className='flex items-center gap-4'>
-            <button
-              onClick={handleLikeClick}
-              className={`flex items-center gap-2 transition-colors ${liked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
-                }`}
-            >
-              <FaHeartbeat size={22} className={liked ? 'fill-current' : ''} />
-              <span className='text-sm font-medium'>{post.likeCount || 0}</span>
-            </button>
-            <button
-              className='flex items-center gap-2 text-gray-400 hover:text-white transition-colors'
-              onClick={onClick}
-            >
-              <MessageCircle size={22} />
-              <span className='text-sm font-medium'>
-                {post.commentCount || 0}
-              </span>
-            </button>
-            <button
-              className='text-gray-400 hover:text-white transition-colors'
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Share2 size={22} />
-            </button>
-          </div>
-          <button
-            onClick={handleSaveClick}
-            className={`transition-colors ${post.isSaved ? 'text-[#EA6100]' : 'text-gray-400 hover:text-[#EA6100]'
-              }`}
-          >
-            <Bookmark size={22} className={post.isSaved ? 'fill-current' : ''} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Quest Card Component
-const QuestCard: React.FC<{ quest: Quest; onClick: () => void }> = ({
-  quest,
-  onClick,
-}) => {
-  return (
-    <div
-      onClick={onClick}
-      className='bg-[#292929] rounded-xl overflow-hidden cursor-pointer hover:bg-[#3a3a3a] transition-colors border border-gray-800 hover:border-[#EA6100]'
-    >
-      <div className='relative h-48'>
-        <img
-          src={
-            (quest.coverImageUrl as any) ||
-            'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600'
-          }
-          alt={quest.title}
-          className='w-full h-full object-cover'
-        />
-        <div className='absolute inset-0 bg-gradient-to-t from-black/70 to-transparent' />
-        <div className='absolute bottom-0 left-0 right-0 p-4'>
-          <h4 className='text-white font-bold text-lg mb-1 line-clamp-1'>
-            {quest.title}
-          </h4>
-          <div className='flex items-center gap-2 text-gray-300 text-sm'>
-            <MapPin size={14} />
-            <span className='line-clamp-1'>{quest.destination}</span>
-          </div>
-        </div>
-      </div>
-      <div className='p-4'>
-        <div className='flex items-center justify-between text-sm'>
-          <span className='text-gray-400 text-xs'>
-            {new Date(quest.startDate).toLocaleDateString()} -{' '}
-            {new Date(quest.endDate).toLocaleDateString()}
-          </span>
-          <span className='text-[#EA6100] font-medium text-xs'>
-            {quest.isPublic ? 'Public' : 'Private'}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default AccountPage;

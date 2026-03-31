@@ -157,9 +157,19 @@ const AccountPage = () => {
           setBadges(userBadges.slice(0, 3));
 
           // Updated gamification logic
-          const gData = await getUserGamificationData(profileUserId);
-          const rankInfo = calculateRankInfo(gData);
-          setGamificationInfo(rankInfo);
+          try {
+            const gData = await getUserGamificationData(profileUserId);
+            if (gData) {
+              const rankInfo = calculateRankInfo(gData);
+              setGamificationInfo({
+                ...gData,
+                ...rankInfo,
+                nextRankTitle: rankInfo.nextRank ? rankInfo.nextRank.title : 'Max Rank'
+              });
+            }
+          } catch (error) {
+            console.error('Error loading gamification data:', error);
+          }
 
           // Get logged-in user's data for saved posts check
           let loggedInUserData = null;
@@ -438,7 +448,7 @@ const AccountPage = () => {
                     {gamificationInfo && (
                       <div
                         className='absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#EA6100] text-black px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer hover:scale-105 transition-transform'
-                        onClick={() => navigateTo('/gamification')}
+                        onClick={() => navigateTo('/gamification/leaderboard')}
                         title='View Gamification Hub'
                       >
                         {gamificationInfo.rankTitle}
@@ -518,7 +528,7 @@ const AccountPage = () => {
               {gamificationInfo && (
                 <div
                   className='mt-6 bg-[#1a1a1a] rounded-xl p-5 cursor-pointer hover:bg-[#292929] transition-colors border border-gray-800'
-                  onClick={() => navigateTo('/gamification')}
+                  onClick={() => navigateTo('/gamification/leaderboard')}
                 >
                   <div className='flex items-center justify-between mb-4'>
                     <div className='flex items-center gap-3'>
@@ -560,14 +570,19 @@ const AccountPage = () => {
                   <div className='mt-4'>
                     <div className='flex justify-between text-sm mb-2'>
                       <span className='text-gray-400'>Progress to {gamificationInfo.nextRankTitle}</span>
-                      <span className='text-[#EA6100]'>{Math.round(gamificationInfo.qpProgress * 100)}%</span>
+                      <span className='text-[#EA6100]'>{Math.round((gamificationInfo.qpProgress || 0) * 100)}%</span>
                     </div>
                     <div className='w-full bg-gray-700 rounded-full h-2'>
                       <div
                         className='bg-gradient-to-r from-[#EA6100] to-[#ff9a50] h-2 rounded-full transition-all'
-                        style={{ width: `${gamificationInfo.qpProgress * 100}%` }}
+                        style={{ width: `${(gamificationInfo.qpProgress || 0) * 100}%` }}
                       ></div>
                     </div>
+                    {gamificationInfo.nextRank && (
+                      <div className='text-xs text-gray-500 mt-2 text-right'>
+                        {gamificationInfo.totalQPs} / {gamificationInfo.nextRank.qpRequired} QP ({gamificationInfo.qpToNext} QP remaining)
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -582,8 +597,7 @@ const AccountPage = () => {
                         key={badge.id}
                         className='flex-shrink-0 bg-[#292929] rounded-lg p-3 hover:bg-[#3a3a3a] transition-colors cursor-pointer'
                         title={badge.description}
-                        onClick={() => navigateTo('/gamification')}
-                      >
+                        onClick={() => navigateTo('/gamification/leaderboard')}                      >
                         <img
                           src={badge.iconUrl}
                           alt={badge.name}

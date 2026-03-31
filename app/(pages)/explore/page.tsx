@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
-import { ChevronRight, Search, X, MapPin, Award, TrendingUp } from 'lucide-react';
+import { collection, getDocs, getDoc, doc as firestoreDoc, limit, orderBy, query, where } from 'firebase/firestore';
+import { ChevronRight, Search, X, MapPin, Award, TrendingUp, Trophy, Crown, Medal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Post, User as UserType } from '@/app/types';
 import { auth, db } from '@/lib/firebase';
@@ -36,6 +36,7 @@ const ExploreRightSidebar = ({ user, userData, style }: any) => {
   const [badges, setBadges] = useState<any[]>([]);
   const [rankInfo, setRankInfo] = useState<any>(null);
   const [trendingLocations, setTrendingLocations] = useState<any[]>([]);
+  const [topQuesters, setTopQuesters] = useState<any[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -85,6 +86,33 @@ const ExploreRightSidebar = ({ user, userData, style }: any) => {
     };
 
     fetchTrendingLocations();
+  }, []);
+
+  useEffect(() => {
+    const fetchTopQuesters = async () => {
+      try {
+        const q = query(collection(db, 'gamification'), orderBy('totalQPs', 'desc'), limit(5));
+        const snapshot = await getDocs(q);
+        const results = await Promise.all(
+          snapshot.docs.map(async (d) => {
+            const data = d.data();
+            const userDoc = await getDoc(firestoreDoc(db, 'users', d.id));
+            const u = userDoc.exists() ? userDoc.data() : null;
+            return {
+              uid: d.id,
+              displayName: u?.displayName || 'Anonymous',
+              photoURL: u?.photoURL || '/default-avatar.png',
+              totalQPs: data.totalQPs || 0,
+              rankTitle: data.rankTitle || 'Newcomer',
+            };
+          })
+        );
+        setTopQuesters(results);
+      } catch (e) {
+        console.error('Error fetching leaderboard:', e);
+      }
+    };
+    fetchTopQuesters();
   }, []);
 
   return (
@@ -199,7 +227,7 @@ const ExploreRightSidebar = ({ user, userData, style }: any) => {
       {/* End User Stats Card */}
 
       {/* Trending Locations */}
-      <div className='bg-gray-900 rounded-xl border border-gray-700 p-4'>
+      <div className='bg-gray-900 rounded-xl border border-gray-700 p-4 mb-4'>
         <div className='flex items-center gap-2 mb-4'>
           <MapPin className='w-5 h-5 text-[#F7CEB0]' />
           <h4 className='text-white font-medium text-base'>
@@ -229,6 +257,57 @@ const ExploreRightSidebar = ({ user, userData, style }: any) => {
             <p className='text-gray-400 text-sm text-center'>
               No trending locations yet
             </p>
+          )}
+        </div>
+      </div>
+
+      {/* Mini Leaderboard */}
+      <div className='bg-gray-900 rounded-xl border border-gray-700 overflow-hidden'>
+        <div className='bg-gradient-to-r from-[#EA6100] to-[#f97316] px-4 py-3 flex items-center justify-between'>
+          <div className='flex items-center gap-2'>
+            <Trophy className='w-4 h-4 text-black' />
+            <h4 className='text-black font-bold text-sm'>Top Questers</h4>
+          </div>
+          <button
+            onClick={() => router.push('/gamification/leaderboard')}
+            className='text-black/70 text-xs font-medium hover:text-black transition-colors flex items-center gap-1'
+          >
+            View All <ChevronRight className='w-3 h-3' />
+          </button>
+        </div>
+        <div className='divide-y divide-gray-800'>
+          {topQuesters.map((player, index) => (
+            <div
+              key={player.uid}
+              className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition-colors cursor-pointer ${
+                player.uid === user?.uid ? 'bg-[#EA6100]/10 border-l-2 border-[#EA6100]' : ''
+              }`}
+              onClick={() => router.push(`/profile/${player.uid}`)}
+            >
+              <span className='text-gray-500 text-xs font-bold w-4 text-center'>
+                {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+              </span>
+              <img
+                src={player.photoURL}
+                alt={player.displayName}
+                className='w-8 h-8 rounded-full object-cover border border-gray-700'
+              />
+              <div className='flex-1 min-w-0'>
+                <p className='text-white text-sm font-medium truncate'>
+                  {player.displayName}
+                  {player.uid === user?.uid && (
+                    <span className='ml-1 text-[10px] bg-[#EA6100] text-black px-1.5 py-0.5 rounded-full'>You</span>
+                  )}
+                </p>
+                <p className='text-gray-500 text-xs'>{player.rankTitle}</p>
+              </div>
+              <span className='text-[#EA6100] font-bold text-sm whitespace-nowrap'>
+                {player.totalQPs.toLocaleString()} QP
+              </span>
+            </div>
+          ))}
+          {topQuesters.length === 0 && (
+            <p className='text-gray-500 text-sm text-center py-6'>No data yet</p>
           )}
         </div>
       </div>
@@ -660,6 +739,7 @@ const MobileExplore = () => {
   const [recommendedPosts, setRecommendedPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [topQuesters, setTopQuesters] = useState<any[]>([]);
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Post[]>([]);
@@ -715,8 +795,34 @@ const MobileExplore = () => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
-
     return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const fetchTopQuesters = async () => {
+      try {
+        const q = query(collection(db, 'gamification'), orderBy('totalQPs', 'desc'), limit(5));
+        const snapshot = await getDocs(q);
+        const results = await Promise.all(
+          snapshot.docs.map(async (d) => {
+            const data = d.data();
+            const userDoc = await getDoc(firestoreDoc(db, 'users', d.id));
+            const u = userDoc.exists() ? userDoc.data() : null;
+            return {
+              uid: d.id,
+              displayName: u?.displayName || 'Anonymous',
+              photoURL: u?.photoURL || '/default-avatar.png',
+              totalQPs: data.totalQPs || 0,
+              rankTitle: data.rankTitle || 'Newcomer',
+            };
+          })
+        );
+        setTopQuesters(results);
+      } catch (e) {
+        console.error('Error fetching leaderboard:', e);
+      }
+    };
+    fetchTopQuesters();
   }, []);
 
   useEffect(() => {
@@ -979,6 +1085,79 @@ const MobileExplore = () => {
                 </p>
               </div>
             )}
+          </div>
+
+          {/* Leaderboard Section */}
+          <div className='mb-8'>
+            <div className='flex justify-between items-center mb-4'>
+              <div>
+                <h3 className='font-semibold text-2xl flex items-center gap-2'>
+                  <Trophy className='w-6 h-6 text-[#EA6100]' />
+                  Top Questers
+                </h3>
+                <p className='text-gray-400 text-sm'>Quest Points leaderboard</p>
+              </div>
+              <button
+                onClick={() => router.push('/gamification/leaderboard')}
+                className='flex items-center gap-1 text-[#EA6100] text-sm font-medium hover:underline'
+              >
+                View All <ChevronRight className='w-4 h-4' />
+              </button>
+            </div>
+
+            <div className='bg-[#1a1a1a] rounded-2xl overflow-hidden border border-gray-800'>
+              {/* Top 3 Podium */}
+              {topQuesters.length >= 3 && (
+                <div className='grid grid-cols-3 gap-2 p-4 bg-gradient-to-b from-[#EA6100]/10 to-transparent border-b border-gray-800'>
+                  {/* 2nd */}
+                  <div className='text-center'>
+                    <img src={topQuesters[1]?.photoURL} alt={topQuesters[1]?.displayName} className='w-12 h-12 rounded-full border-2 border-gray-500 object-cover mx-auto mb-1' />
+                    <div className='text-2xl'>🥈</div>
+                    <p className='text-white text-xs font-medium truncate'>{topQuesters[1]?.displayName}</p>
+                    <p className='text-[#EA6100] text-xs font-bold'>{topQuesters[1]?.totalQPs} QP</p>
+                  </div>
+                  {/* 1st */}
+                  <div className='text-center -mt-2'>
+                    <div className='text-2xl text-center mb-1'>👑</div>
+                    <img src={topQuesters[0]?.photoURL} alt={topQuesters[0]?.displayName} className='w-14 h-14 rounded-full border-2 border-[#EA6100] object-cover mx-auto mb-1' />
+                    <div className='text-2xl'>🥇</div>
+                    <p className='text-white text-xs font-bold truncate'>{topQuesters[0]?.displayName}</p>
+                    <p className='text-[#EA6100] text-xs font-bold'>{topQuesters[0]?.totalQPs} QP</p>
+                  </div>
+                  {/* 3rd */}
+                  <div className='text-center'>
+                    <img src={topQuesters[2]?.photoURL} alt={topQuesters[2]?.displayName} className='w-12 h-12 rounded-full border-2 border-[#CD7F32] object-cover mx-auto mb-1' />
+                    <div className='text-2xl'>🥉</div>
+                    <p className='text-white text-xs font-medium truncate'>{topQuesters[2]?.displayName}</p>
+                    <p className='text-[#EA6100] text-xs font-bold'>{topQuesters[2]?.totalQPs} QP</p>
+                  </div>
+                </div>
+              )}
+              {/* Remaining rows (4th & 5th) */}
+              <div className='divide-y divide-gray-800'>
+                {topQuesters.slice(3).map((player, i) => (
+                  <div
+                    key={player.uid}
+                    className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition-colors cursor-pointer ${
+                      player.uid === user?.uid ? 'bg-[#EA6100]/10 border-l-2 border-[#EA6100]' : ''
+                    }`}
+                    onClick={() => router.push(`/profile/${player.uid}`)}
+                  >
+                    <span className='text-gray-500 text-sm font-bold w-5 text-center'>{i + 4}</span>
+                    <img src={player.photoURL} alt={player.displayName} className='w-9 h-9 rounded-full object-cover border border-gray-700' />
+                    <div className='flex-1 min-w-0'>
+                      <p className='text-white text-sm font-medium truncate'>
+                        {player.displayName}
+                        {player.uid === user?.uid && <span className='ml-1 text-[10px] bg-[#EA6100] text-black px-1.5 py-0.5 rounded-full'>You</span>}
+                      </p>
+                      <p className='text-gray-500 text-xs'>{player.rankTitle}</p>
+                    </div>
+                    <span className='text-[#EA6100] font-bold text-sm'>{player.totalQPs.toLocaleString()} QP</span>
+                  </div>
+                ))}
+              </div>
+              {topQuesters.length === 0 && <p className='text-gray-500 text-sm text-center py-8'>No data yet</p>}
+            </div>
           </div>
 
           <div className='mb-20'>
