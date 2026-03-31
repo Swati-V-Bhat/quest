@@ -108,21 +108,22 @@ export interface QuestContext {
 
 export interface Post {
   imageUrls?: any;
-  likedBy: any;
+  likedBy?: string[];
   id: string;
+  uid?: string;
   authorId: string;
   text: string;
   caption?: string;
   userName: string;
   userProfilePic: string;
-  createdAt: string;
+  createdAt: any;
   questId?: string;
   questTitle?: string;
   questImage?: string;
   photoUrl?: string;
   postType?: 'regular' | 'event' | 'sponsored' | 'quest_completion';
   contentType?: 'text_only' | 'photo_only' | 'photo_with_text';
-  location?: string | null;
+  location?: string;
   topics?: string[];
   taggedUsers?: string[];
   likeCount?: number;
@@ -139,6 +140,7 @@ export interface Post {
   eventCapacity?: number | null;
   attendeesCount?: number;
   questContext?: QuestContext;
+  questData?: any;
 }
 
 export interface Comment {
