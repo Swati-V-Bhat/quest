@@ -36,7 +36,7 @@ import {
   getDoc,
 } from 'firebase/firestore';
 import questService from '@/lib/questService';
-import { Quest } from '@/app/types';
+import { Quest, Post } from '@/app/types';
 import NavBar from '@/components/LeftSideNav';
 import { getFollowingList } from '@/lib/followService';
 
@@ -80,25 +80,7 @@ interface Badge {
   description: string;
 }
 
-interface Post {
-  id: string;
-  uid: string;
-  authorId: string;
-  userName: string;
-  userProfilePic: string;
-  text: string;
-  photoUrl: string;
-  createdAt: any;
-  likeCount: number;
-  commentCount: number;
-  shareCount?: number;
-  location?: string;
-  likedBy: string[];
-  isSaved?: boolean;
-  postType?: 'regular' | 'quest_completion' | 'event' | 'sponsored';
-  questData?: any;
-  questContext?: any;
-}
+// Local Post interface removed to use global type from @/app/types
 
 const AccountPage = () => {
   const router = useRouter();
@@ -337,7 +319,7 @@ const AccountPage = () => {
               likedBy: isLiked
                 ? post.likedBy?.filter((id) => id !== user.uid)
                 : [...(post.likedBy || []), user.uid],
-              likeCount: isLiked ? post.likeCount - 1 : post.likeCount + 1,
+              likeCount: isLiked ? (post.likeCount || 0) - 1 : (post.likeCount || 0) + 1,
             }
             : post
         );
@@ -381,13 +363,12 @@ const AccountPage = () => {
     }
   };
 
-  const formatQuestAsPost = (quest: any) => {
+  const formatQuestAsPost = (quest: any): Post => {
     return {
       id: quest.id,
       uid: quest.creatorId || userData?.uid || '',
       authorId: quest.creatorId || userData?.uid || '',
       userName: userData?.displayName || 'User',
-      username: userData?.displayName?.toLowerCase().replace(/\s+/g, '') || '',
       userProfilePic: userData?.photoURL || '/default-avatar.png',
       text: quest.title || '',
       photoUrl: quest.coverImageUrl || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600',

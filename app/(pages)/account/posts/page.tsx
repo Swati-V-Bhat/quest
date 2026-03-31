@@ -8,27 +8,9 @@ import { addComment, savePost, unsavePost, sharePost } from '@/lib/postService';
 import MobilePostCard from '@/components/Home/MobilePostCard';
 import { ArrowLeft } from 'lucide-react';
 import { collection, query, where, orderBy, getDocs, doc as firestoreDoc, updateDoc, arrayUnion, arrayRemove, increment, getDoc } from 'firebase/firestore';
+import { Post } from '@/app/types';
 
-interface Post {
-  id: string;
-  uid: string;
-  authorId: string;
-  userName: string;
-  userProfilePic: string;
-  text: string;
-  photoUrl?: string;
-  createdAt: any;
-  likeCount: number;
-  commentCount: number;
-  shareCount: number;
-  location: string;
-  likedBy: string[];
-  isSaved?: boolean;
-  postType?: 'regular' | 'event' | 'sponsored' | 'quest_completion';
-  questData?: any;
-  questContext?: any;
-  
-}
+// Local Post interface removed to use global type from @/app/types
 
 const AllPostsPage = () => {
   const router = useRouter();
@@ -148,7 +130,7 @@ const AllPostsPage = () => {
           const isLiked = p.likedBy?.includes(user.uid);
           return {
             ...p,
-            likeCount: isLiked ? (p.likeCount || 1) - 1 : (p.likeCount || 0) + 1,
+            likeCount: isLiked ? (p.likeCount || 0) - 1 : (p.likeCount || 0) + 1,
             likedBy: isLiked 
               ? (p.likedBy || []).filter((uid: string) => uid !== user.uid)
               : [...(p.likedBy || []), user.uid]

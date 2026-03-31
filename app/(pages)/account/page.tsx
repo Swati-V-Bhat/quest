@@ -43,7 +43,7 @@ import {
   getDoc,
 } from 'firebase/firestore';
 import questService from '@/lib/questService';
-import { Quest } from '@/app/types';
+import { Quest, Post } from '@/app/types';
 import NavBar from '@/components/LeftSideNav';
 import {
   followUser as followUserService,
@@ -95,25 +95,7 @@ interface Badge {
   description: string;
 }
 
-interface Post {
-  id: string;
-  uid: string;
-  authorId: string;
-  userName: string;
-  userProfilePic: string;
-  text: string;
-  photoUrl?: string | string[];
-  createdAt: any;
-  likeCount: number;
-  commentCount: number;
-  shareCount?: number;
-  location?: string;
-  likedBy?: string[];
-  isSaved?: boolean;
-  postType?: string;
-  questData?: any;
-  questContext?: any;
-}
+// Local Post interface removed to use global type from @/app/types
 
 const AccountPage = () => {
   const router = useRouter();
@@ -378,7 +360,7 @@ const AccountPage = () => {
               likedBy: isLiked
                 ? post.likedBy?.filter((id) => id !== user.uid)
                 : [...(post.likedBy || []), user.uid],
-              likeCount: isLiked ? post.likeCount - 1 : post.likeCount + 1,
+              likeCount: isLiked ? (post.likeCount || 0) - 1 : (post.likeCount || 0) + 1,
             }
             : post
         );
