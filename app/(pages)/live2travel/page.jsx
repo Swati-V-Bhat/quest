@@ -1,9 +1,9 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import {
-    MapPin, Sparkles, Camera, GraduationCap, ArrowRight,
-    CheckCircle2, X, Copy, Tent, Utensils, Star,
-    Flame, Zap, Send, Ticket
+    MapPin, Sparkles, Camera, ArrowRight,
+    CheckCircle2, X, Copy, Star,
+    Flame, Zap, Send, Banknote, ShieldAlert
 } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
@@ -20,235 +20,144 @@ const Navbar = ({ onOpenModal, onScrollToForm }) => (
     <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
         <div className="bg-[#0E0E12]/80 backdrop-blur-xl border border-[#FF8C00]/20 rounded-full px-6 py-3 flex items-center gap-8 shadow-2xl shadow-[#FF8C00]/10 pointer-events-auto">
             <div className="flex items-center gap-2">
-                <span className="text-2xl font-black tracking-tighter text-[#FFFCE0] style={{textShadow: '0 2px 10px rgba(255,140,0,0.3)'}}">
+                <span className="text-2xl font-black tracking-tighter text-[#FFFCE0]">
                     <img src="/OQ_LOGO_MAIN.svg" alt="OnQuest Logo" className="h-10 w-28" />
                 </span>
             </div>
 
             <div className="hidden md:flex items-center gap-6">
-                <a href="#how" className="text-sm font-bold text-[#FFFCE0]/70 hover:text-[#FFFCE0] transition-colors uppercase tracking-wider">Vibe Check</a>
-                <a href="#rule" className="text-sm font-bold text-[#FFFCE0]/70 hover:text-[#FFFCE0] transition-colors uppercase tracking-wider">The Rule</a>
+                <a href="#how" className="text-sm font-bold text-[#FFFCE0]/70 hover:text-[#FFFCE0] transition-colors uppercase tracking-wider">The Tea ☕</a>
+                <a href="#rule" className="text-sm font-bold text-[#FFFCE0]/70 hover:text-emerald-400 transition-colors uppercase tracking-wider">Rules</a>
                 <button
                     onClick={onScrollToForm}
-                    className="bg-[#FF8C00] text-[#0E0E12] px-6 py-2 rounded-full text-sm font-black uppercase tracking-wider hover:bg-[#FF9F33] transition-transform active:scale-95 shadow-[0_0_20px_-5px_#FF8C00]"
+                    className="bg-emerald-400 text-[#0E0E12] px-6 py-2 rounded-full text-sm font-black uppercase tracking-wider hover:bg-emerald-300 transition-transform active:scale-95 shadow-[0_0_20px_-5px_theme(colors.emerald.400)]"
                 >
-                    Apply Now
+                    Secure The Bag
                 </button>
             </div>
         </div>
     </nav>
 );
 
-const Hero = ({ onScrollToForm, onOpenModal }) => (
-    <section className="relative min-h-screen flex items-start md:items-center justify-center overflow-hidden pt-20">
+const Hero = ({ onScrollToForm }) => (
+    <section className="relative min-h-screen flex items-start md:items-center justify-center overflow-hidden pt-32 pb-20">
         {/* Dynamic Background */}
         <div className="absolute inset-0 z-0">
-            {/* Desktop Image */}
+            {/* Extremely Gen-Z aesthetic Unsplash background */}
             <img
-                src="/bunny_banaras.png"
-                alt="Ranbir in Banaras Illustration"
-                className="w-full h-full object-cover object-center scale-105 hidden md:block"
+                src="https://images.unsplash.com/photo-1574169208507-84376144848b?q=80&w=2679&auto=format&fit=crop"
+                alt="Gen Z Aesthetics"
+                className="w-full h-full object-cover object-center scale-105 opacity-60"
             />
-            {/* Mobile Image - Cropped from bottom */}
-            <img
-                src="/bunny_banaras.png"
-                alt="Ranbir in Banaras Illustration (Mobile)"
-                className="w-full h-full object-cover object-top scale-105 block md:hidden"
-            />
-
-            {/* Mobile Gradient: Dark at top for text readability, transparent at bottom */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#0E0E12] via-[#0E0E12]/60 to-transparent block md:hidden" />
-
-            {/* Desktop Gradients */}
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 to-transparent hidden md:block" />
-            <div className="absolute inset-0 bg-slate-980/20 mix-blend-multiply hidden md:block" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0E0E12]/80 via-[#0E0E12]/90 to-[#0E0E12]" />
+            <div className="absolute inset-0 bg-emerald-900/10 mix-blend-multiply" />
         </div>
 
-        <div className="relative z-10 w-full container mx-auto px-4 pt-8 md:pt-0 grid lg:grid-cols-2 gap-12 items-start md:items-center">
-            <div className="space-y-6 max-w-2xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ff6900]/10 border border-[#ff6900]/20 text-[#ff6900] text-xs font-bold uppercase tracking-wider">
-                    <Sparkles size={12} />
-                    Limited Seats • College Students Only
+        <div className="relative z-10 w-full container mx-auto px-4 grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8 max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider animate-pulse">
+                    <Zap size={14} className="text-emerald-400" />
+                    1 Week Only • Free Money Glitch
                 </div>
 
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.1]">
-                    Wanna be <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff6900] to-yellow-400">Bunny</span> from YJHD?
+                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-white leading-[0.95]">
+                    STOP BEING AN <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 italic">NPC.</span>
+                    <br />
+                    GET PAID.
                 </h1>
 
-                <p className="text-lg md:text-xl text-slate-300 leading-relaxed max-w-lg">
-                    We're sending 10 student travellers to <strong>Banaras(VARANASI)</strong>.
-                    Free accommodation, local eats, and a chance to be an OnQuest Ambassador.
+                <p className="text-xl md:text-2xl text-slate-300 leading-snug font-medium max-w-lg">
+                    Cook a <strong className="text-white">W Quest</strong>. Pass our vibe check. We send <strong className="text-emerald-400">₹50</strong> straight to your UPI. Literally zero cap. 🧢
                 </p>
 
                 <div className="flex flex-wrap gap-4 pt-4">
                     <button
                         onClick={onScrollToForm}
-                        className="px-8 py-4 bg-[#ff6900] hover:bg-orange-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-[#ff6900]/20 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-2"
+                        className="px-8 py-5 bg-emerald-400 hover:bg-emerald-300 text-[#0E0E12] rounded-2xl font-black text-xl uppercase tracking-widest shadow-[0_0_40px_-10px_theme(colors.emerald.500)] transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-2"
                     >
-                        Apply
-                        <ArrowRight size={20} />
-                    </button>
-                    <button
-                        onClick={onOpenModal}
-                        className="px-6 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-2xl font-semibold backdrop-blur-sm transition-all"
-                    >
-                        See Sample Quest
+                        I want ₹50
+                        <ArrowRight size={24} />
                     </button>
                 </div>
 
-                <div className="flex items-center gap-6 pt-4 text-sm text-slate-400 font-medium">
-                    <span className="flex items-center gap-2"><Tent size={16} className="text-[#ff6900]" /> 3 Days Stay</span>
-                    <span className="flex items-center gap-2"><Utensils size={16} className="text-[#ff6900]" /> Curated Eats</span>
-                    <span className="flex items-center gap-2"><Star size={16} className="text-[#ff6900]" /> Ambassador Status</span>
+                <div className="flex items-center gap-6 pt-6 text-sm text-slate-400 font-bold uppercase tracking-wider">
+                    <span className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10"><Banknote size={16} className="text-emerald-400" /> Instant UPI</span>
+                    <span className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10"><Flame size={16} className="text-red-400" /> 7 Days Only</span>
                 </div>
             </div>
 
-            {/* Hero Card / Preview */}
-            {/* <div className="hidden lg:block relative">
-            <div className="absolute -inset-1 bg-gradient-to-tr from-[#ff6900] to-yellow-500 rounded-3xl blur opacity-30 animate-pulse"></div>
-            <div className="relative bg-slate-900/60 backdrop-blur-xl border border-white/10 p-6 rounded-3xl shadow-2xl">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h3 className="text-white font-bold text-xl">What's the catch?</h3>
-                  <p className="text-slate-400 text-sm mt-1">There is no money involved. Just one rule.</p>
+            {/* Glowing Graphic Side */}
+            <div className="hidden lg:block relative mx-auto w-full max-w-sm">
+                <div className="absolute -inset-4 bg-gradient-to-tr from-emerald-500 to-cyan-500 rounded-[3rem] blur-2xl opacity-40 animate-pulse"></div>
+                <div className="relative bg-[#1A1A24]/80 backdrop-blur-2xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl origin-bottom-right -rotate-3 hover:rotate-0 transition-transform duration-500">
+                    <div className="flex items-center justify-between mb-8">
+                        <h3 className="text-white font-black text-2xl uppercase italic">The Math</h3>
+                        <div className="bg-emerald-500/20 p-3 rounded-2xl">
+                            <Banknote className="text-emerald-400" size={28} />
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-4 bg-black/40 p-5 rounded-2xl border border-white/5">
+                            <div className="text-3xl">📱</div>
+                            <div>
+                                <h4 className="text-white font-bold text-lg">1. Drop a Quest</h4>
+                                <p className="text-sm text-slate-400">Share a spot.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4 bg-black/40 p-5 rounded-2xl border border-white/5">
+                            <div className="text-3xl">✨</div>
+                            <div>
+                                <h4 className="text-white font-bold text-lg">2. QuestScore &gt; 70</h4>
+                                <p className="text-sm text-slate-400">Pass the check.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4 bg-emerald-500/10 p-5 rounded-2xl border border-emerald-500/30">
+                            <div className="text-3xl">💸</div>
+                            <div>
+                                <h4 className="text-emerald-400 font-bold text-lg">3. +₹50</h4>
+                                <p className="text-sm text-emerald-400/70">Hits your bank.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className="bg-[#ff6900]/20 p-2 rounded-lg">
-                  <AlertCircle className="text-[#ff6900]" />
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
-                  <div className="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-xl">1</div>
-                  <div>
-                    <h4 className="text-white font-semibold">Make a Quest</h4>
-                    <p className="text-xs text-slate-400">Create a guide about your last trip on OnQuest.</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
-                  <div className="w-12 h-12 rounded-full bg-[#ff6900] flex items-center justify-center text-white font-bold text-xl">2</div>
-                  <div>
-                    <h4 className="text-white font-semibold">Submit Link</h4>
-                    <p className="text-xs text-slate-400">Paste the public link in the form below.</p>
-                  </div>
-                </div>
-              </div>
-    
-              <div className="mt-6 pt-6 border-t border-white/10 text-center">
-                <p className="text-slate-400 text-sm">Deadline: <span className="text-white font-bold">Applications closing soon</span></p>
-              </div>
             </div>
-          </div> */}
         </div>
     </section>
 );
 
-const BentoCard = ({ icon: Icon, title, desc, className, image }) => (
-    <div className={`relative overflow-hidden rounded-3xl bg-[#1A1A24] border border-[#FF8C00]/10 p-8 group hover:border-[#FF8C00]/50 transition-all duration-500 hover:shadow-[0_0_30px_-10px_#FF8C00] ${className}`}>
+const BentoCard = ({ icon: Icon, title, desc, className, image, highlightColor = "#FF8C00" }) => (
+    <div className={`relative overflow-hidden rounded-[2.5rem] bg-[#1A1A24] border border-white/5 p-8 group hover:border-${highlightColor}/50 transition-all duration-500 ${className}`}
+         style={{ '--hi-color': highlightColor }}>
         {image && (
-            <img src={image} alt="bg" className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-opacity mix-blend-luminosity" />
+            <img src={image} alt="bg" className="absolute inset-0 w-full h-full object-cover opacity-[0.15] group-hover:opacity-30 transition-opacity mix-blend-luminosity duration-700 block" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E12] via-[#0E0E12]/80 to-transparent" />
 
         <div className="relative z-10 h-full flex flex-col justify-between">
-            <div className="w-14 h-14 rounded-2xl bg-[#FF8C00]/10 backdrop-blur-md flex items-center justify-center mb-4 border border-[#FF8C00]/20 group-hover:scale-110 transition-transform group-hover:bg-[#FF8C00] group-hover:text-[#0E0E12]">
-                <Icon className="text-[#FF8C00] group-hover:text-[#0E0E12] transition-colors" size={28} />
+            <div className="w-16 h-16 rounded-2xl bg-black/40 backdrop-blur-md flex items-center justify-center mb-6 border border-white/10 group-hover:scale-110 transition-transform duration-500 overflow-hidden relative">
+                {/* Dynamic colored glow inside icon box */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity" style={{ backgroundColor: highlightColor }} />
+                <Icon size={32} style={{ color: highlightColor }} />
             </div>
             <div>
-                <h3 className="text-2xl font-black text-[#FFFCE0] mb-2 leading-tight uppercase">{title}</h3>
-                <p className="text-[#FFFCE0]/70 text-sm leading-relaxed font-medium">{desc}</p>
+                <h3 className="text-3xl font-black text-white mb-3 leading-tight uppercase italic drop-shadow-md">{title}</h3>
+                <p className="text-slate-300 text-base leading-relaxed font-medium">{desc}</p>
             </div>
         </div>
     </div>
 );
 
-const SampleQuestModal = ({ isOpen, onClose }) => {
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-[#0E0E12]/90 backdrop-blur-xl" onClick={onClose} />
-            <div className="relative w-full max-w-md bg-[#0E0E12] border border-[#FF8C00]/20 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
-
-                {/* Header */}
-                <div className="p-6 border-b border-[#FF8C00]/10 flex justify-between items-center bg-[#1A1A24]">
-                    <div>
-                        <h3 className="text-[#FFFCE0] font-black text-xl uppercase">Quest Blueprint</h3>
-                        <p className="text-xs text-[#FF8C00] font-bold uppercase tracking-wider">The winning formula</p>
-                    </div>
-                    <button onClick={onClose} className="p-2 bg-[#0E0E12] rounded-full text-[#FFFCE0] hover:bg-[#FF8C00] hover:text-[#0E0E12] transition-colors">
-                        <X size={20} />
-                    </button>
-                </div>
-
-                {/* Phone Screen Simulation */}
-                <div className="flex-1 overflow-y-auto p-0 bg-[#0E0E12]">
-                    <div className="relative h-52">
-                        <img src="https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=800&q=80" className="w-full h-full object-cover opacity-80" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E12] to-transparent" />
-                        <div className="absolute bottom-4 left-4">
-                            <span className="bg-[#FF8C00] text-[#0E0E12] text-[10px] font-black px-2 py-1 rounded uppercase">Example</span>
-                            <h2 className="text-[#FFFCE0] font-black text-2xl mt-1 uppercase">Banaras Dawn Walk</h2>
-                        </div>
-                    </div>
-
-                    <div className="p-6 space-y-6">
-                        {/* Checklist */}
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-3 p-4 rounded-2xl bg-[#1A1A24] border border-[#FF8C00]/10">
-                                <Camera className="text-[#FF8C00]" size={24} />
-                                <div className="text-sm text-[#FFFCE0]/70 font-medium"><span className="text-[#FFFCE0] font-black uppercase">5+ Vibe Photos</span> <br />No blurry aesthetic pls.</div>
-                            </div>
-                            <div className="flex items-center gap-3 p-4 rounded-2xl bg-[#1A1A24] border border-[#FF8C00]/10">
-                                <MapPin className="text-[#FF8C00]" size={24} />
-                                <div className="text-sm text-[#FFFCE0]/70 font-medium"><span className="text-[#FFFCE0] font-black uppercase">The Route</span> <br />Start Point → End Point</div>
-                            </div>
-                            <div className="flex items-center gap-3 p-4 rounded-2xl bg-[#1A1A24] border border-[#FF8C00]/10">
-                                <Star className="text-[#FF8C00]" size={24} />
-                                <div className="text-sm text-[#FFFCE0]/70 font-medium"><span className="text-[#FFFCE0] font-black uppercase">3 Real Tips</span> <br />"Don't get scammed at X"</div>
-                            </div>
-                        </div>
-
-                        {/* Copyable Content */}
-                        <div className="bg-[#1A1A24] p-4 rounded-xl border-2 border-dashed border-[#FF8C00]/30 relative group">
-                            <h4 className="text-[10px] font-bold text-[#FF8C00] uppercase mb-2">Description Template</h4>
-                            <p className="text-xs font-mono text-[#FFFCE0]/80">
-                                Route: Assi Ghat - Dashashwamedh<br />
-                                Top 3 Tips:<br />
-                                1. Best lassi at Blue Lassi Shop.<br />
-                                2. Go at 5 AM for sunrise.<br />
-                                3. Bargain 50% on boat rides.
-                            </p>
-                            <button
-                                onClick={() => navigator.clipboard.writeText("Template copied")}
-                                className="absolute top-3 right-3 p-1.5 bg-[#FF8C00] rounded-md text-[#0E0E12] opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                                <Copy size={16} />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="p-4 border-t border-[#FF8C00]/10 bg-[#1A1A24]">
-                    <button onClick={onClose} className="w-full py-4 bg-[#FF8C00] text-[#0E0E12] font-black uppercase tracking-wider rounded-xl hover:scale-[1.02] transition-transform shadow-lg">
-                        Got it, Let's Cook
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-}
-
 const ApplicationForm = () => {
     const [user] = useAuthState(auth);
-    const [formData, setFormData] = useState({ name: '', college: '', email: '', phone: '', reason: '', questLink: '', handle: '', consent: false });
+    const [formData, setFormData] = useState({ name: '', upiId: '', phone: '', questLink: '', consent: false });
     const [status, setStatus] = useState('idle');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!user) {
-            alert("Please log in to submit an application.");
+            alert("Bro, log in first to submit. 💀");
             return;
         }
 
@@ -259,210 +168,187 @@ const ApplicationForm = () => {
                 ...formData,
                 uid: user.uid,
                 createdAt: serverTimestamp(),
-                source: 'live2travel'
+                source: 'live2travel_50inr',
+                status: 'pending' // pending manual/automated QuestScore review
             });
             setStatus('success');
         } catch (error) {
-            console.error("Error submitting application: ", error);
-            alert("Something went wrong. Please try again.");
+            console.error("Error submitting: ", error);
+            alert("Glitch in the matrix. Try again.");
             setStatus('idle');
         }
     };
 
     if (status === 'success') {
         return (
-            <div className="text-center py-12 animate-in fade-in zoom-in">
-                <div className="w-24 h-24 bg-[#FF8C00]/10 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-[#FF8C00]">
-                    <CheckCircle2 size={48} className="text-[#FF8C00]" />
+            <div className="text-center py-16 animate-in fade-in zoom-in slide-in-from-bottom-10 duration-500">
+                <div className="w-28 h-28 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-8 border-4 border-emerald-500 shadow-[0_0_50px_-10px_theme(colors.emerald.500)] relative overflow-hidden">
+                     <div className="absolute inset-0 bg-emerald-400 opacity-20 animate-ping"></div>
+                    <CheckCircle2 size={56} className="text-emerald-400 relative z-10" />
                 </div>
-                <h3 className="text-3xl font-black text-[#FFFCE0] mb-2 uppercase italic">You're In Line!</h3>
-                <p className="text-[#FFFCE0]/70 mb-8 font-medium">If your vibe matches ours, <br />you'll see a WhatsApp message soon.</p>
-                <button onClick={() => setStatus('idle')} className="text-[#FF8C00] font-black uppercase tracking-wider hover:underline underline-offset-4">
-                    Send another
+                <h3 className="text-4xl font-black text-white mb-4 uppercase italic tracking-wider">Massive W!</h3>
+                <p className="text-slate-300 mb-10 font-bold text-lg">Your Quest is under review. <br />If it bangs, expect ₹50 in your UPI soon. 💸</p>
+                <button onClick={() => setStatus('idle')} className="text-emerald-400 font-black uppercase tracking-widest hover:text-emerald-300 transition-colors border-b-2 border-emerald-500/30 hover:border-emerald-400 pb-1">
+                    Drop Another Quest
                 </button>
             </div>
         );
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid md:grid-cols-2 gap-5">
-                <div className="group">
+        <form onSubmit={handleSubmit} className="space-y-6 relative">
+            <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                    <label className="block text-xs font-black text-slate-500 uppercase tracking-widest flex items-center mb-2 pl-2">Name</label>
                     <input
-                        required type="text" placeholder="Full Name"
-                        className="w-full bg-[#0E0E12] border-2 border-[#FF8C00]/10 rounded-xl p-4 text-[#FFFCE0] focus:outline-none focus:border-[#FF8C00] transition-all placeholder:text-[#FFFCE0]/40 font-bold"
+                        required type="text" placeholder="John Doe"
+                        className="w-full bg-black/40 border-2 border-white/5 rounded-2xl p-5 text-white focus:outline-none focus:border-emerald-500 focus:bg-emerald-900/10 transition-all placeholder:text-white/20 font-bold text-lg"
                         value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
                 </div>
                 <div>
+                    <label className="block text-xs font-black text-emerald-500 uppercase tracking-widest flex items-center mb-2 pl-2"><Zap size={12} className="mr-1"/> UPI ID (Where we send the bag)</label>
                     <input
-                        required type="text" placeholder="College (e.g., IIT BHU)"
-                        className="w-full bg-[#0E0E12] border-2 border-[#FF8C00]/10 rounded-xl p-4 text-[#FFFCE0] focus:outline-none focus:border-[#FF8C00] transition-all placeholder:text-[#FFFCE0]/40 font-bold"
-                        value={formData.college} onChange={(e) => setFormData({ ...formData, college: e.target.value })}
+                        required type="text" placeholder="username@upi"
+                        className="w-full bg-black/40 border-2 border-white/5 rounded-2xl p-5 text-white focus:outline-none border-emerald-500/30 focus:border-emerald-500 focus:bg-emerald-900/10 transition-all placeholder:text-white/20 font-bold text-lg"
+                        value={formData.upiId} onChange={(e) => setFormData({ ...formData, upiId: e.target.value })}
                     />
                 </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-5">
+            <div>
+                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 pl-2">WhatsApp Number</label>
                 <input
-                    required type="email" placeholder="College Email (.edu/.ac.in)"
-                    className="w-full bg-[#0E0E12] border-2 border-[#FF8C00]/10 rounded-xl p-4 text-[#FFFCE0] focus:outline-none focus:border-[#FF8C00] transition-all placeholder:text-[#FFFCE0]/40 font-bold"
-                    value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-                <input
-                    required type="tel" placeholder="WhatsApp Number"
-                    className="w-full bg-[#0E0E12] border-2 border-[#FF8C00]/10 rounded-xl p-4 text-[#FFFCE0] focus:outline-none focus:border-[#FF8C00] transition-all placeholder:text-[#FFFCE0]/40 font-bold"
+                    required type="tel" placeholder="Used to notify you"
+                    className="w-full bg-black/40 border-2 border-white/5 rounded-2xl p-5 text-white focus:outline-none focus:border-emerald-500 focus:bg-emerald-900/10 transition-all placeholder:text-white/20 font-bold text-lg"
                     value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 />
             </div>
 
-            <div>
-                <input
-                    type="text" placeholder="Instagram/Twitter Handle (Optional)"
-                    className="w-full bg-[#0E0E12] border-2 border-[#FF8C00]/10 rounded-xl p-4 text-[#FFFCE0] focus:outline-none focus:border-[#FF8C00] transition-all placeholder:text-[#FFFCE0]/40 font-bold"
-                    value={formData.handle} onChange={(e) => setFormData({ ...formData, handle: e.target.value })}
-                />
-            </div>
-
-            <textarea
-                required rows={3}
-                placeholder="Why do you deserve this trip? Be bold. Don't be boring."
-                className="w-full bg-[#0E0E12] border-2 border-[#FF8C00]/10 rounded-xl p-4 text-[#FFFCE0] focus:outline-none focus:border-[#FF8C00] transition-all placeholder:text-[#FFFCE0]/40 font-bold resize-none"
-                value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-            />
-
 
             {/* The Important Bit */}
-            <div className="p-1 rounded-2xl bg-gradient-to-r from-[#FF8C00] via-red-500 to-purple-600 shadow-xl">
-                <div className="bg-[#0E0E12] rounded-[12px] p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                        <Send className="text-[#FF8C00]" size={20} />
-                        <label className="text-sm font-black text-[#FFFCE0] uppercase tracking-wider">Your Quest Link (Crucial)</label>
+            <div className="p-[2px] rounded-[1.5rem] bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-600 shadow-2xl relative overflow-hidden group">
+                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity mix-blend-overlay"></div>
+                <div className="bg-[#0E0E12] rounded-[1.4rem] p-6 relative z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                        <Send className="text-emerald-400" size={24} />
+                        <label className="text-base font-black text-white uppercase tracking-widest italic">The Quest Link</label>
                     </div>
                     <input
                         required type="url" placeholder="https://onquest.in/quest/..."
-                        className="w-full bg-[#1A1A24] border-none rounded-xl p-4 text-[#FFFCE0] focus:ring-2 focus:ring-[#FF8C00] placeholder:text-[#FFFCE0]/40 font-bold"
+                        className="w-full bg-[#1A1A24] border-none rounded-xl p-5 text-emerald-50 focus:ring-2 focus:ring-emerald-400 placeholder:text-white/20 font-bold text-lg shadow-inner"
                         value={formData.questLink} onChange={(e) => setFormData({ ...formData, questLink: e.target.value })}
                     />
                 </div>
             </div>
 
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-start gap-4 pt-4 px-2">
                 <input
                     type="checkbox" required id="consent"
-                    className="w-6 h-6 rounded border-[#FF8C00]/30 bg-[#0E0E12] text-[#FF8C00] focus:ring-[#FF8C00]"
+                    className="w-6 h-6 mt-1 rounded-md border-white/10 bg-black text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 focus:ring-2 cursor-pointer"
                     checked={formData.consent} onChange={(e) => setFormData({ ...formData, consent: e.target.checked })}
                 />
-                <label htmlFor="consent" className="text-sm text-[#FFFCE0]/70 cursor-pointer select-none font-medium leading-tight">
-                    I confirm I am a current college student and the Quest submitted is my original work.
+                <label htmlFor="consent" className="text-sm text-slate-400 cursor-pointer select-none font-bold leading-relaxed">
+                    No CAP 🧢: I confirm this is a high-effort, original Quest. If it's pure garbage or fake, I get 0 rupees. I know the drill.
                 </label>
             </div>
 
             <button
                 disabled={status === 'submitting'}
-                className="w-full bg-[#FF8C00] hover:bg-[#FF9F33] text-[#0E0E12] py-6 rounded-xl font-black text-2xl uppercase tracking-widest shadow-[0_0_30px_-5px_#FF8C00] transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed mt-6"
+                className="w-full bg-emerald-400 hover:bg-emerald-300 text-[#0E0E12] py-6 rounded-2xl font-black text-2xl uppercase tracking-[0.2em] shadow-[0_0_40px_-10px_theme(colors.emerald.500)] transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed mt-8 flex items-center justify-center gap-3 hover:shadow-[0_0_60px_-10px_theme(colors.emerald.500)]"
             >
-                {status === 'submitting' ? 'Sending...' : 'Send It 🚀'}
+                {status === 'submitting' ? 'Manifesting...' : 'Claim ₹50 💸'}
             </button>
         </form>
     );
 };
 
 export default function App() {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-
     const scrollToForm = () => {
         const el = document.getElementById('apply-section');
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     return (
-        // Updated Background and Selection Colors to match theme
-        <div className="min-h-screen bg-[#0E0E12] text-[#FFFCE0] font-sans selection:bg-[#FF8C00] selection:text-[#0E0E12] overflow-x-hidden">
+        <div className="min-h-screen bg-[#0E0E12] text-[#FFFCE0] font-sans selection:bg-emerald-400 selection:text-[#0E0E12] overflow-x-hidden">
             <GrainOverlay />
-            <Navbar onOpenModal={() => setIsModalOpen(true)} onScrollToForm={scrollToForm} />
-            <Hero onScrollToForm={scrollToForm} onOpenModal={() => setIsModalOpen(true)} />
+            <Navbar onScrollToForm={scrollToForm} />
+            <Hero onScrollToForm={scrollToForm} />
 
             {/* Feature Bento Grid */}
-            <section id="how" className="py-12 px-4 relative z-10">
-                <div className="max-w-6xl mx-auto">
-                    <div className="mb-16 flex flex-col md:flex-row justify-between items-start gap-6">
-                        <div>
-                            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tight leading-none text-[#FFFCE0] drop-shadow-lg">
-                                Why The <br /><span className="text-[#FF8C00]">Hype?</span>
-                            </h2>
+            <section id="how" className="py-24 px-4 relative z-10">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-emerald-900/20 blur-[120px] rounded-full pointer-events-none" />
+                
+                <div className="max-w-6xl mx-auto relative z-10">
+                    <div className="mb-20 flex flex-col items-center text-center">
+                        <div className="inline-block bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-xs font-black text-slate-400 uppercase tracking-widest mb-6">
+                            How it works
                         </div>
-                        <p className="text-[#FFFCE0]/70 max-w-sm text-left font-bold text-lg">We pay for the stay.<br />You pay with your stories.</p>
+                        <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-[0.9] text-white drop-shadow-2xl italic">
+                            THE <span className="text-emerald-400">BLUEPRINT</span>
+                        </h2>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-6 auto-rows-[320px]">
+                    <div className="grid md:grid-cols-3 gap-6 auto-rows-[340px]">
                         <BentoCard
                             className="md:col-span-2"
-                            title="Creator Economy 101"
-                            desc="Don't just consume. Create a Quest that guides thousands. This is your portfolio piece."
-                            icon={Camera}
-                            // Use warm, high contrast images here
-                            image="https://fourthwall.com/webflow-cdn/63ff7c6ecc83f9ec7ffe916b/67103d6dee895d41c23fb5e7_6656289fde213456d156929b_CreatorEconomy-ezgif.com-png-to-webp-converter.webp"
-                        />
-                        <BentoCard
-                            className="md:col-span-1 bg-[#1A1A24]"
-                            title="Travel Influencer"
-                            desc="Top picks get featured. You become the face of OnQuest for your campus."
-                            icon={Star}
-                            image="https://images.unsplash.com/photo-1602081967340-63762a43a599?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                        />
-                        <BentoCard
-                            className="md:col-span-1 bg-[#1A1A24]"
-                            title="Free Stays"
-                            desc="Curated stays. Fully covered."
-                            icon={Utensils}
-                            image="https://images.unsplash.com/photo-1700004060538-cb750e9a2992?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                        />
-                        <BentoCard
-                            className="md:col-span-2"
-                            title="The Varanasi Vibe"
-                            desc="Chaos and calm. Lassi and Aarti. Experience the duality of the oldest city."
+                            title="1. Cook a Quest 👨‍🍳"
+                            desc="Go to OnQuest. Make a Quest about any cool spot, cafe, or trip. Minimum 5 photos, accurate route, and 3 real, non-NPC tips."
                             icon={Flame}
-                            // Use warm, high contrast images here
-                            image="https://images.unsplash.com/photo-1612779774202-68e4305b849b?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                            image="https://images.unsplash.com/photo-1616423640778-28d1b53229bd?q=80&w=2000&auto=format&fit=crop"
+                            highlightColor="#FF4500" // Red/Orange for cooking fire
+                        />
+                        <BentoCard
+                            className="md:col-span-1"
+                            title="2. The Vibe Check 📋"
+                            desc="Our automated QuestScore checks for blurriness, AI-generated slop, and missing info."
+                            icon={ShieldAlert}
+                            image="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1500&auto=format&fit=crop"
+                            highlightColor="#00E5FF" // Cyan for scanning/tech
+                        />
+                        <BentoCard
+                            className="md:col-span-3 lg:col-span-3 bg-gradient-to-br from-[#1A1A24] to-[#0E1510] border-emerald-500/30"
+                            title="3. Secure The Bag 💰"
+                            desc="If you pass the check, we literally just send ₹50 to your UPI. Unlimited entries. Stop reading and start printing."
+                            icon={Banknote}
+                            highlightColor="#10B981" // Emerald
+                            image="https://images.unsplash.com/photo-1612440306122-d7607fc5fdef?q=80&w=2670&auto=format&fit=crop"
                         />
                     </div>
                 </div>
             </section>
 
-            {/* The Rule Section - Vintage Ticket Style */}
-            <section id="rule" className="py-24 px-4 relative z-10">
-                <div className="max-w-5xl mx-auto">
-                    {/* Changed background to a warm parchment color */}
-                    <div className="relative bg-[#F2E8C9] text-[#0E0E12] rounded-[2.5rem] p-8 md:p-20 overflow-hidden transform rotate-1 hover:rotate-0 transition-transform duration-500 shadow-[0_20px_50px_-20px_#FF8C0030] border-4 border-[#0E0E12]">
-
-                        {/* Decorative Ticket Elements */}
-                        <div className="absolute left-0 top-1/2 -translate-x-1/2 w-12 h-12 bg-[#0E0E12] rounded-full" />
-                        <div className="absolute right-0 top-1/2 translate-x-1/2 w-12 h-12 bg-[#0E0E12] rounded-full" />
-                        <Ticket className="absolute top-8 right-8 text-[#0E0E12]/20 w-32 h-32 rotate-12" />
-
+            {/* The Rule Section */}
+            <section id="rule" className="py-32 px-4 relative z-10 flex justify-center">
+                <div className="max-w-4xl w-full">
+                    <div className="relative bg-[#FFFAF0] text-[#0E0E12] rounded-[3rem] p-10 md:p-24 overflow-hidden transform -rotate-1 hover:rotate-1 transition-transform duration-700 shadow-[0_30px_60px_-20px_theme(colors.white/10)] border-[8px] border-[#0E0E12]">
                         <div className="text-center relative z-10">
-                            <h2 className="text-lg font-black tracking-[0.5em] text-[#0E0E12]/60 uppercase mb-6">Mission Brief</h2>
-                            <h3 className="text-5xl md:text-8xl font-black uppercase leading-[0.85] mb-10">
-                                One Rule <br /><span className="text-[#FF8C00]">To Rule Them All</span>
+                            <h2 className="text-xl font-black tracking-[0.4em] text-red-500 uppercase mb-8">Red Flags 🚩</h2>
+                            <h3 className="text-5xl md:text-7xl font-black uppercase leading-[0.85] mb-12 italic">
+                                DON'T DO <br />THIS STUFF.
                             </h3>
 
-                            <p className="text-2xl md:text-3xl font-black max-w-3xl mx-auto mb-12 leading-tight">
-                                You must publish a valid <span className="underline decoration-wavy decoration-[#FF8C00] underline-offset-4">Quest on OnQuest</span>.
-                                <br /><span className="text-lg font-bold text-[#0E0E12]/70 mt-4 block font-mono">Photos + Route + 3 Real Tips. No generic AI stuff.</span>
-                            </p>
-
-                            <button
-                                onClick={() => setIsModalOpen(true)}
-                                className="inline-flex items-center gap-3 px-8 py-4 bg-[#0E0E12] text-[#FFFCE0] font-black uppercase tracking-wider rounded-full hover:bg-[#FF8C00] hover:text-[#0E0E12] transition-all shadow-xl"
-                            >
-                                See a winning example <ArrowRight size={20} />
-                            </button>
+                            <div className="text-xl md:text-2xl font-black max-w-2xl mx-auto space-y-6 text-left">
+                                <p className="flex items-start gap-4">
+                                    <span className="text-red-500">❌</span> 
+                                    <span>Posting blurry pics from your phone's 2018 gallery.</span>
+                                </p>
+                                <p className="flex items-start gap-4">
+                                    <span className="text-red-500">❌</span> 
+                                    <span>Using ChatGPT for description: "Nestled in the heart of the city..." STFU.</span>
+                                </p>
+                                <p className="flex items-start gap-4">
+                                    <span className="text-red-500">❌</span> 
+                                    <span>Missing location pins. How will anyone go there?</span>
+                                </p>
+                                <div className="mt-12 p-6 bg-red-500/10 rounded-2xl border border-red-500/20 text-center">
+                                    <p className="text-lg text-red-700">If you do this, <strong className="font-black">QuestScore = 0</strong>. No money for you. 🤷‍♂️</p>
+                                </div>
+                            </div>
                         </div>
-
-                        {/* Aged Paper Texture Pattern */}
-                        <div className="absolute inset-0 opacity-10 pointer-events-none"
-                            style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/aged-paper.png")' }}>
+                        {/* Noise overlay */}
+                        <div className="absolute inset-0 opacity-40 pointer-events-none mix-blend-multiply"
+                            style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cream-paper.png")' }}>
                         </div>
                     </div>
                 </div>
@@ -470,58 +356,37 @@ export default function App() {
 
             {/* Form Section */}
             <section id="apply-section" className="py-32 px-4 relative z-10">
-                {/* Warmer glow in background */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#FF8C00]/20 to-transparent pointer-events-none mix-blend-screen" />
+                <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/20 to-transparent pointer-events-none" />
+                
+                <div className="max-w-4xl mx-auto relative z-10">
+                    <div className="bg-[#101311] backdrop-blur-3xl border border-emerald-500/30 rounded-[3rem] p-8 md:p-16 shadow-2xl relative overflow-hidden">
+                        
+                        {/* Grid background for tech vibe */}
+                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+                             style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
 
-                <div className="max-w-3xl mx-auto relative z-10">
-                    <div className="bg-[#0E0E12]/80 backdrop-blur-2xl border-2 border-[#FF8C00]/20 rounded-[3rem] p-8 md:p-16 shadow-2xl shadow-[#FF8C00]/20">
-                        <div className="mb-16 text-center">
-                            <div className="inline-block bg-[#FF8C00] text-[#0E0E12] px-6 py-2 rounded-full text-sm font-black uppercase tracking-widest mb-6 shadow-lg">
-                                Final Boss Level
+                        <div className="mb-16 text-center relative z-10">
+                            <div className="inline-flex items-center justify-center gap-2 bg-emerald-400 text-[#0E0E12] px-6 py-2 rounded-full text-sm font-black uppercase tracking-widest mb-6 shadow-[0_0_20px_-5px_theme(colors.emerald.400)] animate-bounce">
+                                <span>💰💰💰</span>
                             </div>
-                            <h2 className="text-5xl md:text-6xl font-black text-[#FFFCE0] mb-4 uppercase">Secure Your Spot</h2>
-                            <p className="text-[#FFFCE0]/70 text-xl font-bold">Don't start unless your Quest link is ready.</p>
+                            <h2 className="text-5xl md:text-7xl font-black text-white mb-6 uppercase italic tracking-tighter">Submit Link</h2>
+                            <p className="text-slate-400 text-xl font-bold">Only drop the link if the Quest is fully cooked.</p>
                         </div>
 
-                        <ApplicationForm />
-                    </div>
-                </div>
-            </section>
-            {/* FAQ Section */}
-            <section id="faq" className="py-16 px-4 relative z-10">
-                <div className="max-w-3xl mx-auto">
-                    <div className="bg-[#0E0E12]/80 backdrop-blur-2xl border-2 border-[#FF8C00]/20 rounded-[3rem] p-8 md:p-16 shadow-2xl shadow-[#FF8C00]/20">
-                        <h4 className="font-black text-3xl text-[#FFFCE0] mb-8 uppercase text-center">FAQs</h4>
-                        <ul className="space-y-6 text-[#FFFCE0]/70">
-                            <li>
-                                <span className="font-bold text-[#FFFCE0] text-lg">Are tickets included?</span>
-                                <p className="text-sm mt-1">Accommodation only. Travel is on you.</p>
-                            </li>
-                            <li>
-                                <span className="font-bold text-[#FFFCE0] text-lg">Can I go with friends?</span>
-                                <p className="text-sm mt-1">Yes, but apply individually.</p>
-                            </li>
-                            <li>
-                                <span className="font-bold text-[#FFFCE0] text-lg">What if I don't have a Quest link?</span>
-                                <p className="text-sm mt-1">You must publish a valid Quest on OnQuest to be eligible. No exceptions.</p>
-                            </li>
-                            <li>
-                                <span className="font-bold text-[#FFFCE0] text-lg">When will I know if I'm selected?</span>
-                                <p className="text-sm mt-1">We'll reach out via WhatsApp within 7-10 days if your application is successful.</p>
-                            </li>
-                        </ul>
+                        <div className="relative z-10">
+                            <ApplicationForm />
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <footer className="border-t border-[#FF8C00]/20 py-16 bg-[#0E0E12] text-center relative z-10">
-                <div className="flex justify-center items-center gap-2 mb-4 opacity-50 hover:opacity-100 transition-opacity">
-                    <img src="/OQ_LOGO_MAIN.svg" alt="OnQuest Logo" className="h-8 md:h-10" />
+            <footer className="border-t border-white/10 py-16 bg-[#0E0E12] text-center relative z-10">
+                <div className="flex justify-center items-center gap-2 mb-6 opacity-30 hover:opacity-100 transition-opacity pb-6">
+                    <img src="/OQ_LOGO_MAIN.svg" alt="OnQuest Logo" className="h-8 grayscale brightness-200" />
                 </div>
-                <p className="text-[#FFFCE0]/50 text-sm font-medium">© 2025 Project Banaras. Built for the real ones.</p>
+                <p className="text-white/30 text-xs font-bold uppercase tracking-widest">© 2026 OnQuest. Secure the bag responsibly.</p>
+                <p className="text-white/20 text-[10px] mt-2 max-w-md mx-auto">*T&C Apply. 1 Week Campaign. Fake or low-effort quests will be rejected. Don't try to game the system, we have devs.</p>
             </footer>
-
-            <SampleQuestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
         </div>
     );
 }
