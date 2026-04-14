@@ -658,6 +658,7 @@ export default function ChatsPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasAutoSelectedChatRef = useRef(false);
   const isDesktop = useResponsive(768);
 
   useEffect(() => {
@@ -723,6 +724,20 @@ export default function ChatsPage() {
       }
 
       setChats(chatsData);
+
+      // Auto-select chat from query params only on initial load
+      if (!hasAutoSelectedChatRef.current && typeof window !== 'undefined') {
+        hasAutoSelectedChatRef.current = true;
+        const searchParams = new window.URLSearchParams(window.location.search);
+        const chatIdParam = searchParams.get('chatId');
+        if (chatIdParam) {
+          const targetChat = chatsData.find(c => c.id === chatIdParam);
+          if (targetChat) {
+            setSelectedChat(targetChat);
+            window.history.replaceState({}, '', '/chats');
+          }
+        }
+      }
     });
 
     return () => unsubscribe();

@@ -34,11 +34,13 @@ import {
   arrayRemove,
   increment,
   getDoc,
+  addDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import questService from '@/lib/questService';
 import { Quest, Post } from '@/app/types';
 import NavBar from '@/components/LeftSideNav';
-import { getFollowingList } from '@/lib/followService';
+import { getFollowingList, isFollowing, followUser, unfollowUser } from '@/lib/followService';
 
 // Feed components for interactive posts/quests
 import MobilePostCard from '@/components/Home/MobilePostCard';
@@ -68,6 +70,8 @@ interface UserData {
   postsCount?: number;
   followers?: string[];
   following?: string[];
+  followersCount?: number;
+  followingCount?: number;
   totalQPs?: number;
   isVerified?: boolean;
   savedPosts?: string[];
@@ -108,6 +112,9 @@ const AccountPage = () => {
   const [savedQuests, setSavedQuests] = useState<Quest[]>([]);
   const [loadingQuests, setLoadingQuests] = useState(false);
   const [followingList, setFollowingList] = useState<string[]>([]);
+  const [isUserFollowing, setIsUserFollowing] = useState(false);
+  const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   // New Unified Tab State
   const [activeMainTab, setActiveMainTab] = useState<'quests' | 'posts' | 'drafts' | 'collections'>('quests');
@@ -134,6 +141,11 @@ const AccountPage = () => {
 
           const following = await getFollowingList(profileUserId);
           setFollowingList(following);
+          
+          if (currentUser && currentUser.uid !== profileUserId) {
+            const hasFollowed = await isFollowing(currentUser.uid, profileUserId);
+            setIsUserFollowing(hasFollowed);
+          }
 
           const userBadges = await getUserBadges(profileUserId);
           setBadges(userBadges.slice(0, 3));
@@ -363,6 +375,96 @@ const AccountPage = () => {
     }
   };
 
+  const handleFollowToggle = async () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    if (isUserFollowing) {
+      setShowUnfollowConfirm(true);
+    } else {
+      setIsFollowLoading(true);
+      try {
+        await followUser(user.uid, profileUserId);
+        setIsUserFollowing(true);
+        if (userData) {
+          setUserData({
+            ...userData,
+            followersCount: (userData.followersCount || userData.followers?.length || 0) + 1
+          });
+        }
+      } catch (error) {
+        console.error('Error following user', error);
+      } finally {
+        setIsFollowLoading(false);
+      }
+    }
+  };
+
+  const handleConfirmUnfollow = async () => {
+    if (!user) return;
+    setIsFollowLoading(true);
+    try {
+      await unfollowUser(user.uid, profileUserId);
+      setIsUserFollowing(false);
+      setShowUnfollowConfirm(false);
+      if (userData) {
+        const currentCount = userData.followersCount !== undefined ? userData.followersCount : (userData.followers?.length || 0);
+        setUserData({
+          ...userData,
+          followersCount: Math.max(0, currentCount - 1)
+        });
+      }
+    } catch (error) {
+      console.error('Error unfollowing user', error);
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
+
+  const handleMessage = async () => {
+    if (!user || !userData) {
+      router.push('/login');
+      return;
+    }
+    
+    try {
+      // Check if DM exists
+      const chatsQuery = query(
+        collection(db, 'chats'),
+        where('isGroup', '==', false),
+        where('members', 'array-contains', user.uid)
+      );
+      
+      const chatsSnapshot = await getDocs(chatsQuery);
+      const existingChat = chatsSnapshot.docs.find(doc => {
+        const members = doc.data().members;
+        return members.includes(profileUserId) && members.length === 2;
+      });
+
+      if (existingChat) {
+        router.push(`/chats?chatId=${existingChat.id}`);
+      } else {
+        // Create new DM
+        const chatData = {
+          isGroup: false,
+          members: [user.uid, profileUserId],
+          name: userData.displayName || 'Anonymous',
+          avatar: userData.photoURL || '/default-avatar.png',
+          lastMessage: '',
+          lastMessageTime: serverTimestamp(),
+          createdAt: serverTimestamp(),
+          createdBy: user.uid
+        };
+
+        const chatRef = await addDoc(collection(db, 'chats'), chatData);
+        router.push(`/chats?chatId=${chatRef.id}`);
+      }
+    } catch (error) {
+      console.error('Error opening message:', error);
+    }
+  };
+
   const formatQuestAsPost = (quest: any): Post => {
     return {
       id: quest.id,
@@ -454,7 +556,7 @@ const AccountPage = () => {
                   </div>
                 </div>
 
-                {isOwnProfile && (
+                {isOwnProfile ? (
                   <div className='hidden lg:flex lg:mb-4'>
                     <button
                       onClick={() => navigateTo('/settings/edit-profile')}
@@ -462,6 +564,31 @@ const AccountPage = () => {
                     >
                       <Edit2 size={18} />
                       <span>Edit Profile</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className='flex w-full lg:w-auto mt-2 lg:mt-0 lg:mb-4 gap-2 justify-center lg:justify-start'>
+                    <button
+                      onClick={handleFollowToggle}
+                      disabled={isFollowLoading}
+                      className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-semibold transition-colors ${
+                        isUserFollowing
+                          ? 'bg-[#292929] hover:bg-[#3a3a3a] text-white border border-[#3a3a3a]'
+                          : 'bg-[#EA6100] hover:bg-[#f5c094] text-black shadow-lg shadow-[#EA6100]/20'
+                      }`}
+                    >
+                      {isFollowLoading ? (
+                        <div className='w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin'></div>
+                      ) : (
+                        <span>{isUserFollowing ? 'Following' : 'Follow'}</span>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleMessage}
+                      className='flex-1 lg:flex-none flex items-center justify-center gap-2 bg-[#292929] hover:bg-[#3a3a3a] text-white px-6 py-2.5 rounded-lg transition-colors border border-[#3a3a3a]'
+                    >
+                      <MessageCircle size={18} />
+                      <span>Message</span>
                     </button>
                   </div>
                 )}
@@ -477,13 +604,13 @@ const AccountPage = () => {
                 </div>
                 <div>
                   <div className='text-xl lg:text-2xl font-bold text-white'>
-                    {userData?.followers?.length || 0}
+                    {userData?.followersCount !== undefined ? userData.followersCount : (userData?.followers?.length || 0)}
                   </div>
                   <div className='text-gray-400 text-sm'>Followers</div>
                 </div>
                 <div>
                   <div className='text-xl lg:text-2xl font-bold text-white'>
-                    {followingList.length}
+                    {userData?.followingCount !== undefined ? userData.followingCount : followingList.length}
                   </div>
                   <div className='text-gray-400 text-sm'>Following</div>
                 </div>
@@ -860,6 +987,47 @@ const AccountPage = () => {
             setSavedPosts(prev => prev.map(p => p.id === updatedPost.id ? { ...p, ...updatedPost } : p));
           }}
         />
+      )}
+
+      {showUnfollowConfirm && (
+        <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-[100] p-4 animate-in fade-in duration-200">
+          <div className="bg-[#1a1a1a] rounded-xl w-full max-w-sm border border-gray-800 overflow-hidden">
+            <div className="p-6 text-center space-y-4">
+              <div className="w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-gray-800">
+                <img
+                  src={userData?.photoURL || '/default-avatar.png'}
+                  alt={userData?.displayName || 'User'}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-bold text-white">Unfollow</h3>
+                <p className="text-gray-400 flex flex-wrap justify-center gap-1">
+                  <span>Stop following</span>
+                  <span className="text-white font-medium">@{userData?.displayName?.toLowerCase().replace(/\s+/g, '')}</span>?
+                </p>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-800 flex flex-col">
+              <button
+                onClick={handleConfirmUnfollow}
+                className="w-full py-4 font-bold text-red-500 hover:bg-[#292929] transition-colors"
+                disabled={isFollowLoading}
+              >
+                {isFollowLoading ? 'Wait...' : 'Unfollow'}
+              </button>
+              <div className="h-px bg-gray-800"></div>
+              <button
+                onClick={() => setShowUnfollowConfirm(false)}
+                className="w-full py-4 text-white hover:bg-[#292929] transition-colors"
+                disabled={isFollowLoading}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
 
