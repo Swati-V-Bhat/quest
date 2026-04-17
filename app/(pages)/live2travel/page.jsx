@@ -1,392 +1,432 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import {
-    MapPin, Sparkles, Camera, ArrowRight,
-    CheckCircle2, X, Copy, Star,
-    Flame, Zap, Send, Banknote, ShieldAlert
+    MapPin, Play, ArrowRight, Mouse, CheckCircle2,
+    Compass, LayoutTemplate, Users, Check,
+    BarChart, Image as ImageIcon, MessageSquare, Plus, DollarSign
 } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { useRouter } from 'next/navigation';
 
-// --- Global Texture Overlay ---
-const GrainOverlay = () => (
-    <div className="fixed inset-0 z-[100] pointer-events-none opacity-20 mix-blend-soft-light"
-        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
-    </div>
-);
-
-const Navbar = ({ onOpenModal, onScrollToForm }) => (
-    <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-        <div className="bg-[#0E0E12]/80 backdrop-blur-xl border border-[#FF8C00]/20 rounded-full px-6 py-3 flex items-center gap-8 shadow-2xl shadow-[#FF8C00]/10 pointer-events-auto">
-            <div className="flex items-center gap-2">
-                <span className="text-2xl font-black tracking-tighter text-[#FFFCE0]">
-                    <img src="/OQ_LOGO_MAIN.svg" alt="OnQuest Logo" className="h-10 w-28" />
+const Navbar = ({ onScrollToForm }) => {
+    const router = useRouter();
+    const [user] = useAuthState(auth);
+    
+    return (
+        <nav className="absolute top-0 left-0 right-0 z-50 flex justify-between items-center px-8 py-6">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
+                {/* Simulated Logo based on image: On in white, Quest in orange */}
+                <span className="text-2xl font-black tracking-tight text-white">
+                    On<span className="text-[#F97316]">Quest</span>
                 </span>
             </div>
+            
+            {!user ? (
+                <button
+                    onClick={() => router.push('/signIn')}
+                    className="bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+                >
+                    Login
+                </button>
+            ) : (
+                <button
+                    onClick={() => router.push('/profile')}
+                    className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 border border-white/20 rounded-lg font-semibold backdrop-blur-sm transition-all"
+                >
+                    Profile
+                </button>
+            )}
+        </nav>
+    );
+};
 
-            <div className="hidden md:flex items-center gap-6">
-                <a href="#how" className="text-sm font-bold text-[#FFFCE0]/70 hover:text-[#FFFCE0] transition-colors uppercase tracking-wider">The Tea ☕</a>
-                <a href="#rule" className="text-sm font-bold text-[#FFFCE0]/70 hover:text-emerald-400 transition-colors uppercase tracking-wider">Rules</a>
+const Hero = ({ onScrollToForm }) => (
+    <section className="relative min-h-[100vh] flex flex-col justify-center items-center text-center px-4 overflow-hidden">
+        {/* Background dark mountain road image */}
+        <div className="absolute inset-0 z-0">
+            <img
+                src="https://images.unsplash.com/photo-1542224566-6e85f2e6772f?q=80&w=2000&auto=format&fit=crop"
+                alt="Mountains Background"
+                className="w-full h-full object-cover opacity-30 object-bottom scale-105"
+            />
+            {/* The signature blue outer glow vignette and heavy dark gradients */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/60 flex-1 to-[#0a0a0a]" />
+            <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 150px rgba(30, 64, 175, 0.2)' }}></div>
+        </div>
+
+        <div className="relative z-10 max-w-4xl pt-20">
+            <div className="flex justify-center mb-6">
+                <span className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/80 text-sm font-medium backdrop-blur-sm">
+                    Live2Travel by OnQuest
+                </span>
+            </div>
+            
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6 leading-tight">
+                Turn Your Travel into <br className="hidden md:block"/>
+                <span className="text-[#F97316]">Real Money</span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-[#A1A1AA] mb-10 max-w-2xl mx-auto font-medium">
+                Create structured travel experiences on OnQuest and earn ₹100 for every approved Quest.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <button
                     onClick={onScrollToForm}
-                    className="bg-emerald-400 text-[#0E0E12] px-6 py-2 rounded-full text-sm font-black uppercase tracking-wider hover:bg-emerald-300 transition-transform active:scale-95 shadow-[0_0_20px_-5px_theme(colors.emerald.400)]"
+                    className="w-full sm:w-auto px-8 py-3.5 bg-[#F97316] hover:bg-[#EA580C] text-white rounded-xl font-semibold shadow-lg shadow-[#F97316]/20 transition-all flex items-center justify-center gap-2 group"
                 >
-                    Secure The Bag
+                    Start Creating Quests
+                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+                <button
+                    onClick={() => alert("Example Quest feature coming soon!")}
+                    className="w-full sm:w-auto px-8 py-3.5 bg-transparent border border-white/20 hover:bg-white/10 text-white rounded-xl font-semibold backdrop-blur-sm transition-all flex items-center justify-center gap-2"
+                >
+                    <Play size={18} />
+                    View Example Quest
                 </button>
             </div>
         </div>
-    </nav>
-);
 
-const Hero = ({ onScrollToForm }) => (
-    <section className="relative min-h-screen flex items-start md:items-center justify-center overflow-hidden pt-32 pb-20">
-        {/* Dynamic Background */}
-        <div className="absolute inset-0 z-0">
-            {/* Extremely Gen-Z aesthetic Unsplash background */}
-            <img
-                src="https://images.unsplash.com/photo-1574169208507-84376144848b?q=80&w=2679&auto=format&fit=crop"
-                alt="Gen Z Aesthetics"
-                className="w-full h-full object-cover object-center scale-105 opacity-60"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#0E0E12]/80 via-[#0E0E12]/90 to-[#0E0E12]" />
-            <div className="absolute inset-0 bg-emerald-900/10 mix-blend-multiply" />
-        </div>
-
-        <div className="relative z-10 w-full container mx-auto px-4 grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8 max-w-2xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider animate-pulse">
-                    <Zap size={14} className="text-emerald-400" />
-                    1 Week Only • Free Money Glitch
-                </div>
-
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-white leading-[0.95]">
-                    STOP BEING AN <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 italic">NPC.</span>
-                    <br />
-                    GET PAID.
-                </h1>
-
-                <p className="text-xl md:text-2xl text-slate-300 leading-snug font-medium max-w-lg">
-                    Cook a <strong className="text-white">W Quest</strong>. Pass our vibe check. We send <strong className="text-emerald-400">₹50</strong> straight to your UPI. Literally zero cap. 🧢
-                </p>
-
-                <div className="flex flex-wrap gap-4 pt-4">
-                    <button
-                        onClick={onScrollToForm}
-                        className="px-8 py-5 bg-emerald-400 hover:bg-emerald-300 text-[#0E0E12] rounded-2xl font-black text-xl uppercase tracking-widest shadow-[0_0_40px_-10px_theme(colors.emerald.500)] transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-2"
-                    >
-                        I want ₹50
-                        <ArrowRight size={24} />
-                    </button>
-                </div>
-
-                <div className="flex items-center gap-6 pt-6 text-sm text-slate-400 font-bold uppercase tracking-wider">
-                    <span className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10"><Banknote size={16} className="text-emerald-400" /> Instant UPI</span>
-                    <span className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10"><Flame size={16} className="text-red-400" /> 7 Days Only</span>
-                </div>
-            </div>
-
-            {/* Glowing Graphic Side */}
-            <div className="hidden lg:block relative mx-auto w-full max-w-sm">
-                <div className="absolute -inset-4 bg-gradient-to-tr from-emerald-500 to-cyan-500 rounded-[3rem] blur-2xl opacity-40 animate-pulse"></div>
-                <div className="relative bg-[#1A1A24]/80 backdrop-blur-2xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl origin-bottom-right -rotate-3 hover:rotate-0 transition-transform duration-500">
-                    <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-white font-black text-2xl uppercase italic">The Math</h3>
-                        <div className="bg-emerald-500/20 p-3 rounded-2xl">
-                            <Banknote className="text-emerald-400" size={28} />
-                        </div>
-                    </div>
-                    
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-4 bg-black/40 p-5 rounded-2xl border border-white/5">
-                            <div className="text-3xl">📱</div>
-                            <div>
-                                <h4 className="text-white font-bold text-lg">1. Drop a Quest</h4>
-                                <p className="text-sm text-slate-400">Share a spot.</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4 bg-black/40 p-5 rounded-2xl border border-white/5">
-                            <div className="text-3xl">✨</div>
-                            <div>
-                                <h4 className="text-white font-bold text-lg">2. QuestScore &gt; 70</h4>
-                                <p className="text-sm text-slate-400">Pass the check.</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4 bg-emerald-500/10 p-5 rounded-2xl border border-emerald-500/30">
-                            <div className="text-3xl">💸</div>
-                            <div>
-                                <h4 className="text-emerald-400 font-bold text-lg">3. +₹50</h4>
-                                <p className="text-sm text-emerald-400/70">Hits your bank.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/40 flex flex-col items-center gap-2">
+            <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center p-1">
+                <div className="w-1 h-2 bg-[#F97316] rounded-full animate-bounce" />
             </div>
         </div>
     </section>
 );
 
-const BentoCard = ({ icon: Icon, title, desc, className, image, highlightColor = "#FF8C00" }) => (
-    <div className={`relative overflow-hidden rounded-[2.5rem] bg-[#1A1A24] border border-white/5 p-8 group hover:border-${highlightColor}/50 transition-all duration-500 ${className}`}
-         style={{ '--hi-color': highlightColor }}>
-        {image && (
-            <img src={image} alt="bg" className="absolute inset-0 w-full h-full object-cover opacity-[0.15] group-hover:opacity-30 transition-opacity mix-blend-luminosity duration-700 block" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E12] via-[#0E0E12]/80 to-transparent" />
+const SectionHeading = ({ title, subtitle }) => (
+    <div className="text-center mb-16">
+        <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">{title}</h2>
+        {subtitle && <p className="text-[#A1A1AA] text-lg max-w-2xl mx-auto">{subtitle}</p>}
+    </div>
+);
 
-        <div className="relative z-10 h-full flex flex-col justify-between">
-            <div className="w-16 h-16 rounded-2xl bg-black/40 backdrop-blur-md flex items-center justify-center mb-6 border border-white/10 group-hover:scale-110 transition-transform duration-500 overflow-hidden relative">
-                {/* Dynamic colored glow inside icon box */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity" style={{ backgroundColor: highlightColor }} />
-                <Icon size={32} style={{ color: highlightColor }} />
+const BentoCard = ({ icon: Icon, title, desc }) => (
+    <div className="bg-[#121212]/80 backdrop-blur-lg border border-white/5 p-8 rounded-2xl hover:scale-[1.02] transition-transform duration-300">
+        <div className="bg-[#F97316]/10 w-12 h-12 rounded-lg flex items-center justify-center mb-6">
+            <Icon size={24} className="text-[#F97316]" />
+        </div>
+        <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
+        <p className="text-[#A1A1AA] leading-relaxed">{desc}</p>
+    </div>
+);
+
+const TimelineStep = ({ num, title, desc }) => (
+    <div className="flex gap-6 relative pb-12 last:pb-0">
+        <div className="flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full border border-white/20 bg-[#121212] flex items-center justify-center text-[#A1A1AA] font-mono text-sm z-10 shrink-0">
+                0{num}
             </div>
-            <div>
-                <h3 className="text-3xl font-black text-white mb-3 leading-tight uppercase italic drop-shadow-md">{title}</h3>
-                <p className="text-slate-300 text-base leading-relaxed font-medium">{desc}</p>
-            </div>
+            {num !== 5 && <div className="absolute top-12 bottom-0 w-[1px] bg-white/10" />}
+        </div>
+        <div className="pt-2">
+            <h4 className="text-lg font-bold text-white mb-2">{title}</h4>
+            <p className="text-[#A1A1AA]">{desc}</p>
         </div>
     </div>
 );
 
 const ApplicationForm = () => {
     const [user] = useAuthState(auth);
-    const [formData, setFormData] = useState({ name: '', upiId: '', phone: '', questLink: '', consent: false });
+    const [formData, setFormData] = useState({ name: '', upiId: '', email: '', phone: '', questLink: '' });
     const [status, setStatus] = useState('idle');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         if (!user) {
-            alert("Bro, log in first to submit. 💀");
+            alert("Please login via OnQuest first to link your account.");
             return;
         }
 
         setStatus('submitting');
-
         try {
             await addDoc(collection(db, 'travel_applications'), {
                 ...formData,
                 uid: user.uid,
                 createdAt: serverTimestamp(),
-                source: 'live2travel_50inr',
-                status: 'pending' // pending manual/automated QuestScore review
+                source: 'live2travel_lovable',
+                payout: 100,
+                status: 'pending' 
             });
             setStatus('success');
         } catch (error) {
             console.error("Error submitting: ", error);
-            alert("Glitch in the matrix. Try again.");
+            alert("Form error. Please try again.");
             setStatus('idle');
         }
     };
 
     if (status === 'success') {
         return (
-            <div className="text-center py-16 animate-in fade-in zoom-in slide-in-from-bottom-10 duration-500">
-                <div className="w-28 h-28 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-8 border-4 border-emerald-500 shadow-[0_0_50px_-10px_theme(colors.emerald.500)] relative overflow-hidden">
-                     <div className="absolute inset-0 bg-emerald-400 opacity-20 animate-ping"></div>
-                    <CheckCircle2 size={56} className="text-emerald-400 relative z-10" />
-                </div>
-                <h3 className="text-4xl font-black text-white mb-4 uppercase italic tracking-wider">Massive W!</h3>
-                <p className="text-slate-300 mb-10 font-bold text-lg">Your Quest is under review. <br />If it bangs, expect ₹50 in your UPI soon. 💸</p>
-                <button onClick={() => setStatus('idle')} className="text-emerald-400 font-black uppercase tracking-widest hover:text-emerald-300 transition-colors border-b-2 border-emerald-500/30 hover:border-emerald-400 pb-1">
-                    Drop Another Quest
+            <div className="text-center py-16 bg-[#121212] border border-white/10 rounded-2xl max-w-xl mx-auto my-12 animate-in fade-in">
+                <CheckCircle2 size={64} className="text-[#10B981] mx-auto mb-6" />
+                <h3 className="text-2xl font-bold text-white mb-3">Quest Submitted Successfully</h3>
+                <p className="text-[#A1A1AA] mb-8">Our team will review your structured itinerary. Once approved, ₹100 will be credited to your UPI.</p>
+                <button onClick={() => setStatus('idle')} className="text-[#F97316] hover:underline font-medium">
+                    Submit Another Quest
                 </button>
             </div>
         );
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6 relative">
-            <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                    <label className="block text-xs font-black text-slate-500 uppercase tracking-widest flex items-center mb-2 pl-2">Name</label>
-                    <input
-                        required type="text" placeholder="John Doe"
-                        className="w-full bg-black/40 border-2 border-white/5 rounded-2xl p-5 text-white focus:outline-none focus:border-emerald-500 focus:bg-emerald-900/10 transition-all placeholder:text-white/20 font-bold text-lg"
-                        value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    />
-                </div>
-                <div>
-                    <label className="block text-xs font-black text-emerald-500 uppercase tracking-widest flex items-center mb-2 pl-2"><Zap size={12} className="mr-1"/> UPI ID (Where we send the bag)</label>
-                    <input
-                        required type="text" placeholder="username@upi"
-                        className="w-full bg-black/40 border-2 border-white/5 rounded-2xl p-5 text-white focus:outline-none border-emerald-500/30 focus:border-emerald-500 focus:bg-emerald-900/10 transition-all placeholder:text-white/20 font-bold text-lg"
-                        value={formData.upiId} onChange={(e) => setFormData({ ...formData, upiId: e.target.value })}
-                    />
-                </div>
-            </div>
-
-            <div>
-                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 pl-2">WhatsApp Number</label>
-                <input
-                    required type="tel" placeholder="Used to notify you"
-                    className="w-full bg-black/40 border-2 border-white/5 rounded-2xl p-5 text-white focus:outline-none focus:border-emerald-500 focus:bg-emerald-900/10 transition-all placeholder:text-white/20 font-bold text-lg"
-                    value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
-            </div>
-
-
-            {/* The Important Bit */}
-            <div className="p-[2px] rounded-[1.5rem] bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-600 shadow-2xl relative overflow-hidden group">
-                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity mix-blend-overlay"></div>
-                <div className="bg-[#0E0E12] rounded-[1.4rem] p-6 relative z-10">
-                    <div className="flex items-center gap-3 mb-4">
-                        <Send className="text-emerald-400" size={24} />
-                        <label className="text-base font-black text-white uppercase tracking-widest italic">The Quest Link</label>
+        <div id="apply-form" className="max-w-2xl mx-auto my-24 bg-[#121212]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-32 bg-[#F97316]/5 blur-[100px] rounded-full pointer-events-none" />
+            <h3 className="text-3xl font-bold text-white mb-2 text-center">Start Earning Now</h3>
+            <p className="text-[#A1A1AA] text-center mb-10">Transform your travel experiences into valuable Quests and get rewarded for your expertise.</p>
+            
+            <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+                 <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-[#A1A1AA]">Full Name</label>
+                        <input
+                            required type="text" placeholder="John Doe"
+                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-[#F97316] transition-colors"
+                            value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        />
                     </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-[#A1A1AA]">UPI ID for Payout</label>
+                        <input
+                            required type="text" placeholder="username@upi"
+                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl p-3 text-white focus:outline-none flex-1 focus:border-[#F97316] transition-colors"
+                            value={formData.upiId} onChange={(e) => setFormData({ ...formData, upiId: e.target.value })}
+                        />
+                    </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-[#A1A1AA]">Account Email</label>
+                        <input
+                            required type="email" placeholder="john@example.com"
+                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-[#F97316] transition-colors"
+                            value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-[#A1A1AA]">WhatsApp Number</label>
+                        <input
+                            required type="tel" placeholder="For updates"
+                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-[#F97316] transition-colors"
+                            value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-white flex items-center gap-2">
+                        <MapPin size={16} className="text-[#F97316]" /> Link to your live OnQuest itinerary
+                    </label>
                     <input
                         required type="url" placeholder="https://onquest.in/quest/..."
-                        className="w-full bg-[#1A1A24] border-none rounded-xl p-5 text-emerald-50 focus:ring-2 focus:ring-emerald-400 placeholder:text-white/20 font-bold text-lg shadow-inner"
+                        className="w-full bg-[#0a0a0a] border border-[#F97316]/50 rounded-xl p-4 text-white focus:outline-none focus:border-[#F97316] transition-colors focus:ring-1 focus:ring-[#F97316]"
                         value={formData.questLink} onChange={(e) => setFormData({ ...formData, questLink: e.target.value })}
                     />
                 </div>
-            </div>
 
-            <div className="flex items-start gap-4 pt-4 px-2">
-                <input
-                    type="checkbox" required id="consent"
-                    className="w-6 h-6 mt-1 rounded-md border-white/10 bg-black text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 focus:ring-2 cursor-pointer"
-                    checked={formData.consent} onChange={(e) => setFormData({ ...formData, consent: e.target.checked })}
-                />
-                <label htmlFor="consent" className="text-sm text-slate-400 cursor-pointer select-none font-bold leading-relaxed">
-                    No CAP 🧢: I confirm this is a high-effort, original Quest. If it's pure garbage or fake, I get 0 rupees. I know the drill.
-                </label>
-            </div>
-
-            <button
-                disabled={status === 'submitting'}
-                className="w-full bg-emerald-400 hover:bg-emerald-300 text-[#0E0E12] py-6 rounded-2xl font-black text-2xl uppercase tracking-[0.2em] shadow-[0_0_40px_-10px_theme(colors.emerald.500)] transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed mt-8 flex items-center justify-center gap-3 hover:shadow-[0_0_60px_-10px_theme(colors.emerald.500)]"
-            >
-                {status === 'submitting' ? 'Manifesting...' : 'Claim ₹50 💸'}
-            </button>
-        </form>
+                <button
+                    disabled={status === 'submitting'}
+                    className="w-full bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:opacity-90 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-[#F97316]/20 transition-all disabled:opacity-50 mt-6"
+                >
+                    {status === 'submitting' ? 'Submitting...' : 'Submit Quest & Earn ₹100'}
+                </button>
+            </form>
+        </div>
     );
 };
 
-export default function App() {
+export default function ReplicatedLovablePage() {
     const scrollToForm = () => {
-        const el = document.getElementById('apply-section');
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const el = document.getElementById('apply-form');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     return (
-        <div className="min-h-screen bg-[#0E0E12] text-[#FFFCE0] font-sans selection:bg-emerald-400 selection:text-[#0E0E12] overflow-x-hidden">
-            <GrainOverlay />
+        <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#F97316] selection:text-white">
             <Navbar onScrollToForm={scrollToForm} />
             <Hero onScrollToForm={scrollToForm} />
 
-            {/* Feature Bento Grid */}
-            <section id="how" className="py-24 px-4 relative z-10">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-emerald-900/20 blur-[120px] rounded-full pointer-events-none" />
-                
-                <div className="max-w-6xl mx-auto relative z-10">
-                    <div className="mb-20 flex flex-col items-center text-center">
-                        <div className="inline-block bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-xs font-black text-slate-400 uppercase tracking-widest mb-6">
-                            How it works
-                        </div>
-                        <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-[0.9] text-white drop-shadow-2xl italic">
-                            THE <span className="text-emerald-400">BLUEPRINT</span>
-                        </h2>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-6 auto-rows-[340px]">
-                        <BentoCard
-                            className="md:col-span-2"
-                            title="1. Cook a Quest 👨‍🍳"
-                            desc="Go to OnQuest. Make a Quest about any cool spot, cafe, or trip. Minimum 5 photos, accurate route, and 3 real, non-NPC tips."
-                            icon={Flame}
-                            image="https://images.unsplash.com/photo-1616423640778-28d1b53229bd?q=80&w=2000&auto=format&fit=crop"
-                            highlightColor="#FF4500" // Red/Orange for cooking fire
-                        />
-                        <BentoCard
-                            className="md:col-span-1"
-                            title="2. The Vibe Check 📋"
-                            desc="Our automated QuestScore checks for blurriness, AI-generated slop, and missing info."
-                            icon={ShieldAlert}
-                            image="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1500&auto=format&fit=crop"
-                            highlightColor="#00E5FF" // Cyan for scanning/tech
-                        />
-                        <BentoCard
-                            className="md:col-span-3 lg:col-span-3 bg-gradient-to-br from-[#1A1A24] to-[#0E1510] border-emerald-500/30"
-                            title="3. Secure The Bag 💰"
-                            desc="If you pass the check, we literally just send ₹50 to your UPI. Unlimited entries. Stop reading and start printing."
-                            icon={Banknote}
-                            highlightColor="#10B981" // Emerald
-                            image="https://images.unsplash.com/photo-1612440306122-d7607fc5fdef?q=80&w=2670&auto=format&fit=crop"
-                        />
-                    </div>
+            {/* What is OnQuest? */}
+            <section className="py-24 px-4 max-w-6xl mx-auto">
+                <SectionHeading 
+                    title="What is OnQuest?" 
+                    subtitle="A social platform for travelers where people share real travel experiences in a structured, easy-to-follow format called Quests."
+                />
+                <div className="grid md:grid-cols-3 gap-6">
+                    <BentoCard 
+                        icon={LayoutTemplate} 
+                        title="Structured, Not Random" 
+                        desc="Not random blogs or reels — organized, actionable travel itineraries."
+                    />
+                    <BentoCard 
+                        icon={Compass} 
+                        title="Actionable Itineraries" 
+                        desc="Real routes, stops, timings and logistics that anyone can follow directly."
+                    />
+                    <BentoCard 
+                        icon={Users} 
+                        title="Built for Real Travelers" 
+                        desc="A community of doers, not influencers. Your authentic experience matters most."
+                    />
                 </div>
             </section>
 
-            {/* The Rule Section */}
-            <section id="rule" className="py-32 px-4 relative z-10 flex justify-center">
-                <div className="max-w-4xl w-full">
-                    <div className="relative bg-[#FFFAF0] text-[#0E0E12] rounded-[3rem] p-10 md:p-24 overflow-hidden transform -rotate-1 hover:rotate-1 transition-transform duration-700 shadow-[0_30px_60px_-20px_theme(colors.white/10)] border-[8px] border-[#0E0E12]">
-                        <div className="text-center relative z-10">
-                            <h2 className="text-xl font-black tracking-[0.4em] text-red-500 uppercase mb-8">Red Flags 🚩</h2>
-                            <h3 className="text-5xl md:text-7xl font-black uppercase leading-[0.85] mb-12 italic">
-                                DON'T DO <br />THIS STUFF.
-                            </h3>
-
-                            <div className="text-xl md:text-2xl font-black max-w-2xl mx-auto space-y-6 text-left">
-                                <p className="flex items-start gap-4">
-                                    <span className="text-red-500">❌</span> 
-                                    <span>Posting blurry pics from your phone's 2018 gallery.</span>
-                                </p>
-                                <p className="flex items-start gap-4">
-                                    <span className="text-red-500">❌</span> 
-                                    <span>Using ChatGPT for description: "Nestled in the heart of the city..." STFU.</span>
-                                </p>
-                                <p className="flex items-start gap-4">
-                                    <span className="text-red-500">❌</span> 
-                                    <span>Missing location pins. How will anyone go there?</span>
-                                </p>
-                                <div className="mt-12 p-6 bg-red-500/10 rounded-2xl border border-red-500/20 text-center">
-                                    <p className="text-lg text-red-700">If you do this, <strong className="font-black">QuestScore = 0</strong>. No money for you. 🤷‍♂️</p>
-                                </div>
-                            </div>
-                        </div>
-                        {/* Noise overlay */}
-                        <div className="absolute inset-0 opacity-40 pointer-events-none mix-blend-multiply"
-                            style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cream-paper.png")' }}>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Form Section */}
-            <section id="apply-section" className="py-32 px-4 relative z-10">
-                <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/20 to-transparent pointer-events-none" />
-                
-                <div className="max-w-4xl mx-auto relative z-10">
-                    <div className="bg-[#101311] backdrop-blur-3xl border border-emerald-500/30 rounded-[3rem] p-8 md:p-16 shadow-2xl relative overflow-hidden">
+            {/* What is a Quest? */}
+            <section className="py-24 px-4 bg-[#121212]/50 border-y border-white/5 relative">
+                <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+                    <div>
+                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">What is a Quest?</h2>
+                        <p className="text-[#A1A1AA] text-lg mb-8 leading-relaxed">
+                            A Quest is a complete travel plan — structured step-by-step with locations, flow, and map integration.
+                        </p>
                         
-                        {/* Grid background for tech vibe */}
-                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-                             style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
-
-                        <div className="mb-16 text-center relative z-10">
-                            <div className="inline-flex items-center justify-center gap-2 bg-emerald-400 text-[#0E0E12] px-6 py-2 rounded-full text-sm font-black uppercase tracking-widest mb-6 shadow-[0_0_20px_-5px_theme(colors.emerald.400)] animate-bounce">
-                                <span>💰💰💰</span>
-                            </div>
-                            <h2 className="text-5xl md:text-7xl font-black text-white mb-6 uppercase italic tracking-tighter">Submit Link</h2>
-                            <p className="text-slate-400 text-xl font-bold">Only drop the link if the Quest is fully cooked.</p>
+                        <div className="space-y-6">
+                            {[
+                                "Day-by-day or step-by-step flow",
+                                "Real insights — routes, stops, timings",
+                                "Map integration — can be followed by anyone"
+                            ].map((text, i) => (
+                                <div key={i} className="flex items-center gap-4">
+                                    <div className="bg-[#F97316]/10 p-2 rounded-full border border-[#F97316]/20">
+                                        <Check size={18} className="text-[#F97316]" />
+                                    </div>
+                                    <span className="text-white text-lg font-medium">{text}</span>
+                                </div>
+                            ))}
                         </div>
-
-                        <div className="relative z-10">
-                            <ApplicationForm />
+                    </div>
+                    {/* Simulated Mobile Mockup */}
+                    <div className="relative mx-auto w-full max-w-sm rounded-[2.5rem] border-[8px] border-[#1f1f1f] bg-black overflow-hidden shadow-2xl">
+                        <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?q=80&w=2070&auto=format&fit=crop" className="w-full h-[600px] object-cover opacity-80" alt="App preview" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent flex flex-col justify-end p-8">
+                            <h3 className="text-2xl font-bold mb-2">Bali Roadtrip</h3>
+                            <div className="flex gap-2">
+                                <span className="px-3 py-1 bg-white/20 rounded-full text-xs backdrop-blur-md border border-white/10">3 Days</span>
+                                <span className="px-3 py-1 bg-[#F97316]/80 text-white rounded-full text-xs backdrop-blur-md shadow-lg">12 Stops</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <footer className="border-t border-white/10 py-16 bg-[#0E0E12] text-center relative z-10">
-                <div className="flex justify-center items-center gap-2 mb-6 opacity-30 hover:opacity-100 transition-opacity pb-6">
-                    <img src="/OQ_LOGO_MAIN.svg" alt="OnQuest Logo" className="h-8 grayscale brightness-200" />
+             {/* Earn & Quality Section */}
+             <section className="py-24 px-4 max-w-6xl mx-auto">
+                <SectionHeading 
+                    title="Get Paid to Share Your Travel" 
+                    subtitle="Earn ₹100 for every Quest that meets our quality criteria. No followers needed, just great experiences."
+                />
+                
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-24">
+                    <div className="p-8 pb-12 rounded-2xl bg-gradient-to-b from-[#121212] to-[#0a0a0a] border border-white/5 relative overflow-hidden group hover:border-[#F97316]/30 transition-colors">
+                        <DollarSign className="text-[#F97316] w-8 h-8 mb-4 opacity-80 group-hover:scale-110 transition-transform"/>
+                        <h4 className="text-xl font-bold mb-2">₹100 per Quest</h4>
+                        <p className="text-[#A1A1AA] text-sm">Reliable earnings for quality work every time.</p>
+                    </div>
+                    <div className="p-8 pb-12 rounded-2xl bg-gradient-to-b from-[#121212] to-[#0a0a0a] border border-white/5 relative overflow-hidden group hover:border-[#F97316]/30 transition-colors">
+                        <Star className="text-[#F97316] w-8 h-8 mb-4 opacity-80 group-hover:scale-110 transition-transform"/>
+                        <h4 className="text-xl font-bold mb-2">Quality First</h4>
+                        <p className="text-[#A1A1AA] text-sm">We value actionable detail over celebrity status.</p>
+                    </div>
+                    <div className="p-8 pb-12 rounded-2xl bg-gradient-to-b from-[#121212] to-[#0a0a0a] border border-white/5 relative overflow-hidden group hover:border-[#F97316]/30 transition-colors">
+                        <BarChart className="text-[#F97316] w-8 h-8 mb-4 opacity-80 group-hover:scale-110 transition-transform"/>
+                        <h4 className="text-xl font-bold mb-2">Transparent Process</h4>
+                        <p className="text-[#A1A1AA] text-sm">Fast reviews, clear feedback, immediate payouts.</p>
+                    </div>
                 </div>
-                <p className="text-white/30 text-xs font-bold uppercase tracking-widest">© 2026 OnQuest. Secure the bag responsibly.</p>
-                <p className="text-white/20 text-[10px] mt-2 max-w-md mx-auto">*T&C Apply. 1 Week Campaign. Fake or low-effort quests will be rejected. Don't try to game the system, we have devs.</p>
+
+                <div className="bg-[#121212]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-16">
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">What is a Quest Score?</h2>
+                    <p className="text-[#A1A1AA] text-lg mb-12 max-w-3xl">Every Quest is evaluated by our backend with a Quest Score. A higher score means a better, more useful Quest.</p>
+                    
+                    <div className="grid md:grid-cols-3 gap-8 mb-10">
+                        <div>
+                            <div className="w-10 h-10 bg-[#F97316]/10 rounded-full flex items-center justify-center mb-4 text-[#F97316]"><MapPin size={20}/></div>
+                            <h4 className="font-bold text-white mb-2">More = Better</h4>
+                            <p className="text-sm text-[#A1A1AA]">Add more waypoints for a better score.</p>
+                        </div>
+                        <div>
+                            <div className="w-10 h-10 bg-[#F97316]/10 rounded-full flex items-center justify-center mb-4 text-[#F97316]"><MessageSquare size={20}/></div>
+                            <h4 className="font-bold text-white mb-2">Clarity Wins</h4>
+                            <p className="text-sm text-[#A1A1AA]">Include helpful logistical metadata (costs, transit).</p>
+                        </div>
+                        <div>
+                            <div className="w-10 h-10 bg-[#F97316]/10 rounded-full flex items-center justify-center mb-4 text-[#F97316]"><ImageIcon size={20}/></div>
+                            <h4 className="font-bold text-white mb-2">Show, Don't Tell</h4>
+                            <p className="text-sm text-[#A1A1AA]">Upload multiple real photos per waypoint.</p>
+                        </div>
+                    </div>
+                    
+                    <div className="bg-[#0a0a0a] border border-[#F97316]/20 py-4 px-6 rounded-xl flex items-center gap-4">
+                        <span className="text-[#F97316] font-bold">Pro Tip:</span>
+                        <span className="text-[#A1A1AA] text-sm md:text-base">Add 8+ waypoints, write clear descriptions, and upload multiple photos per stop.</span>
+                    </div>
+                </div>
+            </section>
+
+            {/* How It Works */}
+            <section className="py-24 px-4 bg-[#121212]/30 border-t border-white/5">
+                <div className="max-w-2xl mx-auto">
+                    <SectionHeading title="How It Works" />
+                    
+                    <div className="pl-4 md:pl-16">
+                        <TimelineStep 
+                            num="1" title="Sign Up" 
+                            desc="Create your free account on OnQuest." 
+                        />
+                        <TimelineStep 
+                            num="2" title="Create Your Quest" 
+                            desc="Build a structured itinerary from your recent travel." 
+                        />
+                        <TimelineStep 
+                            num="3" title="Post It" 
+                            desc="Publish your Quest to the OnQuest community." 
+                        />
+                        <TimelineStep 
+                            num="4" title="We Review" 
+                            desc="Our internal team checks quality, structure, and Quest Score." 
+                        />
+                        <TimelineStep 
+                            num="5" title="Get ₹100" 
+                            desc="If approved, the money is wired to your account." 
+                        />
+                    </div>
+                </div>
+            </section>
+
+            {/* Application Form */}
+            <div className="px-4">
+                <ApplicationForm />
+            </div>
+
+            <footer className="py-12 border-t border-white/10 text-center">
+                <p className="text-[#A1A1AA] text-sm">© {new Date().getFullYear()} OnQuest. All rights reserved.</p>
             </footer>
         </div>
     );
 }
+
+// Ensure lucide icon 'Star' is imported near the top, I realize I might have missed it, adding a fallback just in case or we can just use another icon, but lucide has Star.
+// Re-checking imports, I have: MapPin, Play, ArrowRight, Mouse, CheckCircle2, Compass, LayoutTemplate, Users, Check, BarChart, Image as ImageIcon, MessageSquare, Plus, DollarSign
+// adding a small local component for Star since I can't overwrite imports mid-file simply.
+const Star = (props) => (
+  <svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
